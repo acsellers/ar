@@ -35,7 +35,7 @@ func setupMysqlDb() (*Migration, *Qbs) {
 }
 
 func registerMysqlTest() {
-	Register(mysqlDriver, fmt.Sprintf(mysqlDrvformat, "root", testDbName), testDbName, NewMysql())
+	Register(mysqlDriver, fmt.Sprintf(mysqlDrvformat, "root:toor", testDbName), testDbName, NewMysql())
 }
 
 func TestMysqlSqlType(t *testing.T) {
