@@ -1,4 +1,4 @@
-package qbs
+package ar
 
 type criteria struct {
 	model      *model
