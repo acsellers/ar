@@ -29,116 +29,127 @@ type sqlGenModel struct {
 var sqlGenSampleData = &sqlGenModel{3, "FirstName", "LastName", 6}
 
 func doTestAddColumSQL(t *testing.T, info dialectSyntax) {
-	assert := NewAssert(t)
-	sql := info.dialect.addColumnSql("a", "c", "", 100)
-	assert.Equal(info.addColumnSql, sql)
+	Within(t, func(test *Test) {
+		sql := info.dialect.addColumnSql("a", "c", "", 100)
+		test.AreEqual(info.addColumnSql, sql)
+	})
 }
 
 func doTestCreateTableSQL(t *testing.T, info dialectSyntax) {
-	assert := NewAssert(t)
-	type withoutPk struct {
-		First  string
-		Last   string
-		Amount int
-	}
-	table := &withoutPk{"a", "b", 5}
-	model := structPtrToModel(table, true, nil)
-	sql := info.dialect.createTableSql(model, true)
-	assert.Equal(info.createTableWithoutPkIfExistsSql, sql)
-	type withPk struct {
-		Primary int64 `qbs:"pk"`
-		First   string
-		Last    string
-		Amount  int
-	}
-	table2 := &withPk{First: "a", Last: "b", Amount: 5}
-	model = structPtrToModel(table2, true, nil)
-	sql = info.dialect.createTableSql(model, false)
-	assert.Equal(info.createTableWithPkSql, sql)
+	Within(t, func(test *Test) {
+		test.Section("Test Create Table Without Primary Key")
+		type withoutPk struct {
+			First  string
+			Last   string
+			Amount int
+		}
+		table := &withoutPk{"a", "b", 5}
+		model := structPtrToModel(table, true, nil)
+		sql := info.dialect.createTableSql(model, true)
+		test.AreEqual(info.createTableWithoutPkIfExistsSql, sql)
+		test.Section("Test Create Table With Primary Key")
+		type withPk struct {
+			Primary int64 `qbs:"pk"`
+			First   string
+			Last    string
+			Amount  int
+		}
+		table2 := &withPk{First: "a", Last: "b", Amount: 5}
+		model = structPtrToModel(table2, true, nil)
+		sql = info.dialect.createTableSql(model, false)
+		test.AreEqual(info.createTableWithPkSql, sql)
+	})
 }
 
 func doTestCreateIndexSQL(t *testing.T, info dialectSyntax) {
-	assert := NewAssert(t)
-	sql := info.dialect.createIndexSql("iname", "itable", true, "a", "b", "c")
-	assert.Equal(info.createUniqueIndexSql, sql)
-	sql = info.dialect.createIndexSql("iname2", "itable2", false, "d", "e")
-	assert.Equal(info.createIndexSql, sql)
+	Within(t, func(test *Test) {
+		sql := info.dialect.createIndexSql("iname", "itable", true, "a", "b", "c")
+		test.AreEqual(info.createUniqueIndexSql, sql)
+		sql = info.dialect.createIndexSql("iname2", "itable2", false, "d", "e")
+		test.AreEqual(info.createIndexSql, sql)
+	})
 }
 
 func doTestInsertSQL(t *testing.T, info dialectSyntax) {
-	assert := NewAssert(t)
-	model := structPtrToModel(sqlGenSampleData, true, nil)
-	criteria := &criteria{model: model}
-	criteria.mergePkCondition(info.dialect)
-	sql, _ := info.dialect.insertSql(criteria)
-	sql = info.dialect.substituteMarkers(sql)
-	assert.Equal(info.insertSql, sql)
+	Within(t, func(test *Test) {
+		model := structPtrToModel(sqlGenSampleData, true, nil)
+		criteria := &criteria{model: model}
+		criteria.mergePkCondition(info.dialect)
+		sql, _ := info.dialect.insertSql(criteria)
+		sql = info.dialect.substituteMarkers(sql)
+		test.AreEqual(info.insertSql, sql)
+	})
 }
 
 func doTestUpdateSQL(t *testing.T, info dialectSyntax) {
-	assert := NewAssert(t)
-	model := structPtrToModel(sqlGenSampleData, true, nil)
-	criteria := &criteria{model: model}
-	criteria.mergePkCondition(info.dialect)
-	sql, _ := info.dialect.updateSql(criteria)
-	sql = info.dialect.substituteMarkers(sql)
-	assert.Equal(info.updateSql, sql)
+	Within(t, func(test *Test) {
+		model := structPtrToModel(sqlGenSampleData, true, nil)
+		criteria := &criteria{model: model}
+		criteria.mergePkCondition(info.dialect)
+		sql, _ := info.dialect.updateSql(criteria)
+		sql = info.dialect.substituteMarkers(sql)
+		test.AreEqual(info.updateSql, sql)
+	})
 }
 
 func doTestDeleteSQL(t *testing.T, info dialectSyntax) {
-	assert := NewAssert(t)
-	model := structPtrToModel(sqlGenSampleData, true, nil)
-	criteria := &criteria{model: model}
-	criteria.mergePkCondition(info.dialect)
-	sql, _ := info.dialect.deleteSql(criteria)
-	sql = info.dialect.substituteMarkers(sql)
-	assert.Equal(info.deleteSql, sql)
+	Within(t, func(test *Test) {
+		model := structPtrToModel(sqlGenSampleData, true, nil)
+		criteria := &criteria{model: model}
+		criteria.mergePkCondition(info.dialect)
+		sql, _ := info.dialect.deleteSql(criteria)
+		sql = info.dialect.substituteMarkers(sql)
+		test.AreEqual(info.deleteSql, sql)
+	})
 }
 
 func doTestSelectionSQL(t *testing.T, info dialectSyntax) {
-	assert := NewAssert(t)
-	type User struct {
-		Id   int64
-		Name string
-	}
-	type Post struct {
-		Id       int64
-		AuthorId int64 `qbs:"fk:Author"`
-		Author   *User
-		Content  string
-	}
-	model := structPtrToModel(new(Post), true, nil)
-	criteria := new(criteria)
-	criteria.model = model
+	Within(t, func(test *Test) {
+		type User struct {
+			Id   int64
+			Name string
+		}
+		type Post struct {
+			Id       int64
+			AuthorId int64 `qbs:"fk:Author"`
+			Author   *User
+			Content  string
+		}
+		model := structPtrToModel(new(Post), true, nil)
+		criteria := new(criteria)
+		criteria.model = model
 
-	sql, _ := info.dialect.querySql(criteria)
-	assert.Equal(info.selectionSql, sql)
+		sql, _ := info.dialect.querySql(criteria)
+		test.AreEqual(info.selectionSql, sql)
+	})
 }
 
 func doTestQuerySQL(t *testing.T, info dialectSyntax) {
-	assert := NewAssert(t)
-	type Student struct {
-		Name  string
-		Grade int
-		Score int
-	}
-	model := structPtrToModel(new(Student), true, nil)
-	criteria := new(criteria)
-	criteria.model = model
-	condition := NewInCondition("grade", []interface{}{6, 7, 8})
-	subCondition := NewCondition("score <= ?", 60).Or("score >= ?", 80)
-	condition.AndCondition(subCondition)
-	criteria.condition = condition
-	criteria.orderBys = []order{order{info.dialect.quote("name"), false}, order{info.dialect.quote("grade"), true}}
-	criteria.offset = 3
-	criteria.limit = 10
-	sql, _ := info.dialect.querySql(criteria)
-	sql = info.dialect.substituteMarkers(sql)
-	assert.Equal(info.querySql, sql)
+	Within(t, func(test *Test) {
+		type Student struct {
+			Name  string
+			Grade int
+			Score int
+		}
+		model := structPtrToModel(new(Student), true, nil)
+		criteria := new(criteria)
+		criteria.model = model
+		condition := NewInCondition("grade", []interface{}{6, 7, 8})
+		subCondition := NewCondition("score <= ?", 60).Or("score >= ?", 80)
+		condition.AndCondition(subCondition)
+		criteria.condition = condition
+		criteria.orderBys = []order{order{info.dialect.quote("name"), false}, order{info.dialect.quote("grade"), true}}
+		criteria.offset = 3
+		criteria.limit = 10
+		sql, _ := info.dialect.querySql(criteria)
+		sql = info.dialect.substituteMarkers(sql)
+		test.AreEqual(info.querySql, sql)
+	})
 }
 
 func doTestDropTableSQL(t *testing.T, info dialectSyntax) {
-	assert := NewAssert(t)
-	sql := info.dialect.dropTableSql("drop_table")
-	assert.Equal(info.dropTableIfExistsSql, sql)
+	Within(t, func(test *Test) {
+		sql := info.dialect.dropTableSql("drop_table")
+		test.AreEqual(info.dropTableIfExistsSql, sql)
+	})
 }
