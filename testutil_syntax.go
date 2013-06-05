@@ -47,6 +47,7 @@ func doTestCreateTableSQL(t *testing.T, info dialectSyntax) {
 		model := structPtrToModel(table, true, nil)
 		sql := info.dialect.createTableSql(model, true)
 		test.AreEqual(info.createTableWithoutPkIfExistsSql, sql)
+
 		test.Section("Test Create Table With Primary Key")
 		type withPk struct {
 			Primary int64 `qbs:"pk"`
