@@ -11,6 +11,10 @@ type Connection struct {
 	txStmtMap map[string]*sql.Stmt
 }
 
+func NewConnection(dialectName, dbName, connector string) *Connection {
+	return nil
+}
+
 func (c *Connection) IndexExists(table, index string) bool {
 	return c.Dialect.indexExists(c.DB, dbName, table, index)
 }

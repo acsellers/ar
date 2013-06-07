@@ -17,10 +17,10 @@ func init() {
 type Dialect interface {
 
 	//Substitute "?" marker if database use other symbol as marker
-	substituteMarkers(query string) string
+	SubstituteMarkers(query string) string
 
 	// Quote will quote identifiers in a SQL statement.
-	quote(s string) string
+	Quote(s string) string
 
 	sqlType(f interface{}, size int) string
 

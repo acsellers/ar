@@ -206,12 +206,12 @@ func (q *Qbs) Offset(offset int) *Qbs {
 }
 
 func (q *Qbs) OrderBy(path string) *Qbs {
-	q.criteria.orderBys = append(q.criteria.orderBys, order{q.Dialect.quote(path), false})
+	q.criteria.orderBys = append(q.criteria.orderBys, order{q.Dialect.Quote(path), false})
 	return q
 }
 
 func (q *Qbs) OrderByDesc(path string) *Qbs {
-	q.criteria.orderBys = append(q.criteria.orderBys, order{q.Dialect.quote(path), true})
+	q.criteria.orderBys = append(q.criteria.orderBys, order{q.Dialect.Quote(path), true})
 	return q
 }
 
@@ -237,7 +237,7 @@ func (q *Qbs) Find(structPtr interface{}) error {
 	q.criteria.model = structPtrToModel(structPtr, !q.criteria.omitJoin, q.criteria.omitFields)
 	q.criteria.limit = 1
 	if !q.criteria.model.pkZero() {
-		idPath := q.Dialect.quote(q.criteria.model.table) + "." + q.Dialect.quote(q.criteria.model.pk.name)
+		idPath := q.Dialect.Quote(q.criteria.model.table) + "." + q.Dialect.Quote(q.criteria.model.pk.name)
 		idCondition := NewCondition(idPath+" = ?", q.criteria.model.pk.value)
 		if q.criteria.condition == nil {
 			q.criteria.condition = idCondition
@@ -353,7 +353,7 @@ func (q *Qbs) scanRows(rowValue reflect.Value, rows *sql.Rows) (err error) {
 // Same as sql.Db.Exec or sql.Tx.Exec depends on if transaction has began
 func (q *Qbs) Exec(query string, args ...interface{}) (sql.Result, error) {
 	defer q.Reset()
-	query = q.Dialect.substituteMarkers(query)
+	query = q.Dialect.SubstituteMarkers(query)
 	q.log(query, args...)
 	stmt, err := q.prepare(query)
 	if err != nil {
@@ -369,7 +369,7 @@ func (q *Qbs) Exec(query string, args ...interface{}) (sql.Result, error) {
 // Same as sql.Db.QueryRow or sql.Tx.QueryRow depends on if transaction has began
 func (q *Qbs) QueryRow(query string, args ...interface{}) *sql.Row {
 	q.log(query, args...)
-	query = q.Dialect.substituteMarkers(query)
+	query = q.Dialect.SubstituteMarkers(query)
 	stmt, err := q.prepare(query)
 	if err != nil {
 		q.updateTxError(err)
@@ -381,7 +381,7 @@ func (q *Qbs) QueryRow(query string, args ...interface{}) *sql.Row {
 // Same as sql.Db.Query or sql.Tx.Query depends on if transaction has began
 func (q *Qbs) Query(query string, args ...interface{}) (rows *sql.Rows, err error) {
 	q.log(query, args...)
-	query = q.Dialect.substituteMarkers(query)
+	query = q.Dialect.SubstituteMarkers(query)
 	stmt, err := q.prepare(query)
 	if err != nil {
 		q.updateTxError(err)
@@ -559,8 +559,8 @@ func (q *Qbs) Delete(structPtr interface{}) (affected int64, err error) {
 // This method can be used to validate unique column before trying to save
 // The table parameter can be either a string or a struct pointer
 func (q *Qbs) ContainsValue(table interface{}, column string, value interface{}) bool {
-	quotedColumn := q.Dialect.quote(column)
-	quotedTable := q.Dialect.quote(tableName(table))
+	quotedColumn := q.Dialect.Quote(column)
+	quotedTable := q.Dialect.Quote(tableName(table))
 	query := fmt.Sprintf("SELECT %v FROM %v WHERE %v = ?", quotedColumn, quotedTable, quotedColumn)
 	row := q.QueryRow(query, value)
 	var result interface{}
@@ -583,7 +583,7 @@ func (q *Qbs) Close() error {
 //Query the count of rows in a table the talbe parameter can be either a string or struct pointer.
 //If condition is given, the count will be the count of rows meet that condition.
 func (q *Qbs) Count(table interface{}) int64 {
-	quotedTable := q.Dialect.quote(tableName(table))
+	quotedTable := q.Dialect.Quote(tableName(table))
 	query := "SELECT COUNT(*) FROM " + quotedTable
 	var row *sql.Row
 	if q.criteria.condition != nil {
@@ -619,7 +619,7 @@ func (q *Qbs) QueryMapSlice(query string, args ...interface{}) ([]map[string]int
 }
 
 func (q *Qbs) doQueryMap(query string, once bool, args ...interface{}) ([]map[string]interface{}, error) {
-	query = q.Dialect.substituteMarkers(query)
+	query = q.Dialect.SubstituteMarkers(query)
 	stmt, err := q.prepare(query)
 	if err != nil {
 		return nil, q.updateTxError(err)
@@ -664,7 +664,7 @@ func (q *Qbs) doQueryMap(query string, once bool, args ...interface{}) ([]map[st
 //The dest parameter can be either a struct pointer or a pointer of struct pointer.slice
 //This method do not support pointer field in the struct.
 func (q *Qbs) QueryStruct(dest interface{}, query string, args ...interface{}) error {
-	query = q.Dialect.substituteMarkers(query)
+	query = q.Dialect.SubstituteMarkers(query)
 	stmt, err := q.prepare(query)
 	if err != nil {
 		return q.updateTxError(err)

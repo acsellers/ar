@@ -13,7 +13,7 @@ type criteria struct {
 func (c *criteria) mergePkCondition(d Dialect) {
 	var con *Condition
 	if !c.model.pkZero() {
-		expr := d.quote(c.model.pk.name) + " = ?"
+		expr := d.Quote(c.model.pk.name) + " = ?"
 		con = NewCondition(expr, c.model.pk.value)
 		con.AndCondition(c.condition)
 	} else {

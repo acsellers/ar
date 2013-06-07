@@ -17,7 +17,7 @@ func newOracle() Dialect {
 	return d
 }
 
-func (d oracleDialect) quote(s string) string {
+func (d oracleDialect) Quote(s string) string {
 	sep := "."
 	a := []string{}
 	c := strings.Split(s, sep)
@@ -71,7 +71,7 @@ func (d oracleDialect) insert(q *Qbs) (int64, error) {
 
 func (d oracleDialect) insertSql(criteria *criteria) (string, []interface{}) {
 	sql, values := d.base.insertSql(criteria)
-	sql += " RETURNING " + d.dialect.quote(criteria.model.pk.name)
+	sql += " RETURNING " + d.dialect.Quote(criteria.model.pk.name)
 	return sql, values
 }
 
@@ -80,13 +80,13 @@ func (d oracleDialect) indexExists(db *sql.DB, dbName, tableName, indexName stri
 	var name string
 	query := "SELECT INDEX_NAME FROM USER_INDEXES "
 	query += "WHERE TABLE_NAME = ? AND INDEX_NAME = ?"
-	query = d.substituteMarkers(query)
+	query = d.SubstituteMarkers(query)
 	row = db.QueryRow(query, tableName, indexName)
 	row.Scan(&name)
 	return name != ""
 }
 
-func (d oracleDialect) substituteMarkers(query string) string {
+func (d oracleDialect) SubstituteMarkers(query string) string {
 	position := 1
 	chunks := make([]string, 0, len(query)*2)
 	for _, v := range query {
@@ -104,7 +104,7 @@ func (d oracleDialect) columnsInTable(db *sql.DB, dbName string, table interface
 	tn := tableName(table)
 	columns := make(map[string]bool)
 	query := "SELECT COLUMN_NAME FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ?"
-	query = d.substituteMarkers(query)
+	query = d.SubstituteMarkers(query)
 	rows, err := db.Query(query, tn)
 	defer rows.Close()
 	if err != nil {
@@ -153,6 +153,6 @@ func (d oracleDialect) catchMigrationError(err error) bool {
 
 func (d oracleDialect) dropTableSql(table string) string {
 	a := []string{"DROP TABLE"}
-	a = append(a, d.dialect.quote(table))
+	a = append(a, d.dialect.Quote(table))
 	return strings.Join(a, " ")
 }
