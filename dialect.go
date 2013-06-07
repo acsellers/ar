@@ -14,6 +14,14 @@ func init() {
 	registeredDialects["oracle"] = newOracle()
 }
 
+// If you have an external dialect, use this function to
+// load it in so that consumers can create Connections using
+// it. You can override builtin dialects by naming your
+// dialect the same as a builtin dialect.
+func RegisterDialect(name string, dialect Dialect) {
+	registeredDialects[name] = dialect
+}
+
 type Dialect interface {
 
 	//Substitute "?" marker if database use other symbol as marker
@@ -22,15 +30,15 @@ type Dialect interface {
 	// Quote will quote identifiers in a SQL statement.
 	Quote(s string) string
 
-	sqlType(f interface{}, size int) string
+	SqlType(f interface{}, size int) string
 
-	parseBool(value reflect.Value) bool
+	ParseBool(value reflect.Value) bool
 
-	setModelValue(value reflect.Value, field reflect.Value) error
+	SetModelValue(value reflect.Value, field reflect.Value) error
 
-	querySql(criteria *criteria) (sql string, args []interface{})
+	QuerySql(criteria *criteria) (sql string, args []interface{})
 
-	insert(q *Qbs) (int64, error)
+	Insert(q *Qbs) (int64, error)
 
 	insertSql(criteria *criteria) (sql string, args []interface{})
 

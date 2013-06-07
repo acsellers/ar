@@ -27,7 +27,7 @@ func (d oracleDialect) Quote(s string) string {
 	return strings.Join(a, sep)
 }
 
-func (d oracleDialect) sqlType(f interface{}, size int) string {
+func (d oracleDialect) SqlType(f interface{}, size int) string {
 	switch f.(type) {
 	case time.Time:
 		return "DATE"
@@ -54,7 +54,7 @@ func (d oracleDialect) sqlType(f interface{}, size int) string {
 	panic("invalid sql type")
 }
 
-func (d oracleDialect) insert(q *Qbs) (int64, error) {
+func (d oracleDialect) Insert(q *Qbs) (int64, error) {
 	sql, args := d.dialect.insertSql(q.criteria)
 	row := q.QueryRow(sql, args...)
 	value := q.criteria.model.pk.value

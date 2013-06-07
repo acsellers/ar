@@ -245,7 +245,7 @@ func (q *Qbs) Find(structPtr interface{}) error {
 			q.criteria.condition = idCondition.AndCondition(q.criteria.condition)
 		}
 	}
-	query, args := q.Dialect.querySql(q.criteria)
+	query, args := q.Dialect.QuerySql(q.criteria)
 	return q.doQueryRow(structPtr, query, args...)
 }
 
@@ -255,7 +255,7 @@ func (q *Qbs) FindAll(ptrOfSliceOfStructPtr interface{}) error {
 	strucType := reflect.TypeOf(ptrOfSliceOfStructPtr).Elem().Elem().Elem()
 	strucPtr := reflect.New(strucType).Interface()
 	q.criteria.model = structPtrToModel(strucPtr, !q.criteria.omitJoin, q.criteria.omitFields)
-	query, args := q.Dialect.querySql(q.criteria)
+	query, args := q.Dialect.QuerySql(q.criteria)
 	return q.doQueryRows(ptrOfSliceOfStructPtr, query, args...)
 }
 
@@ -332,7 +332,7 @@ func (q *Qbs) scanRows(rowValue reflect.Value, rows *sql.Rows) (err error) {
 			}
 			subField := subStruct.Elem().FieldByName(ColumnNameToFieldName(paths[1]))
 			if subField.IsValid() {
-				err = q.Dialect.setModelValue(value, subField)
+				err = q.Dialect.SetModelValue(value, subField)
 				if err != nil {
 					return
 				}
@@ -340,7 +340,7 @@ func (q *Qbs) scanRows(rowValue reflect.Value, rows *sql.Rows) (err error) {
 		} else {
 			field := rowValue.Elem().FieldByName(ColumnNameToFieldName(key))
 			if field.IsValid() {
-				err = q.Dialect.setModelValue(value, field)
+				err = q.Dialect.SetModelValue(value, field)
 				if err != nil {
 					return
 				}
@@ -455,7 +455,7 @@ func (q *Qbs) Save(structPtr interface{}) (affected int64, err error) {
 		if createdModelField != nil {
 			createdModelField.value = now
 		}
-		id, err = q.Dialect.insert(q)
+		id, err = q.Dialect.Insert(q)
 		isInsert = true
 		if err == nil {
 			affected = 1
@@ -510,7 +510,7 @@ func (q *Qbs) BulkInsert(sliceOfStructPtr interface{}) error {
 		}
 		q.criteria.model = model
 		var id int64
-		id, err = q.Dialect.insert(q)
+		id, err = q.Dialect.Insert(q)
 		if err != nil {
 			return q.updateTxError(err)
 		}
@@ -730,7 +730,7 @@ func (q *Qbs) QueryStruct(dest interface{}, query string, args ...interface{}) e
 //if `do` function returns an error, the iteration will be stopped.
 func (q *Qbs) Iterate(structPtr interface{}, do func() error) error {
 	q.criteria.model = structPtrToModel(structPtr, !q.criteria.omitJoin, q.criteria.omitFields)
-	query, args := q.Dialect.querySql(q.criteria)
+	query, args := q.Dialect.QuerySql(q.criteria)
 	q.log(query, args...)
 	defer q.Reset()
 	stmt, err := q.prepare(query)

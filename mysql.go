@@ -17,11 +17,11 @@ func newMysql() Dialect {
 	return d
 }
 
-func (mysqlDialect) parseBool(value reflect.Value) bool {
+func (mysqlDialect) ParseBool(value reflect.Value) bool {
 	return value.Int() != 0
 }
 
-func (d mysqlDialect) sqlType(f interface{}, size int) string {
+func (d mysqlDialect) SqlType(f interface{}, size int) string {
 	switch f.(type) {
 	case time.Time:
 		return "timestamp"

@@ -30,14 +30,14 @@ func (d base) Quote(s string) string {
 	return buf.String()
 }
 
-func (d base) parseBool(value reflect.Value) bool {
+func (d base) ParseBool(value reflect.Value) bool {
 	return value.Bool()
 }
 
-func (d base) setModelValue(driverValue, fieldValue reflect.Value) error {
+func (d base) SetModelValue(driverValue, fieldValue reflect.Value) error {
 	switch fieldValue.Type().Kind() {
 	case reflect.Bool:
-		fieldValue.SetBool(d.dialect.parseBool(driverValue.Elem()))
+		fieldValue.SetBool(d.dialect.ParseBool(driverValue.Elem()))
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		fieldValue.SetInt(driverValue.Elem().Int())
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
@@ -64,7 +64,7 @@ func (d base) setModelValue(driverValue, fieldValue reflect.Value) error {
 	return nil
 }
 
-func (d base) querySql(criteria *criteria) (string, []interface{}) {
+func (d base) QuerySql(criteria *criteria) (string, []interface{}) {
 	query := new(bytes.Buffer)
 	args := make([]interface{}, 0, 20)
 	table := d.dialect.Quote(criteria.model.table)
@@ -127,7 +127,7 @@ func (d base) querySql(criteria *criteria) (string, []interface{}) {
 	return d.dialect.SubstituteMarkers(query.String()), args
 }
 
-func (d base) insert(q *Qbs) (int64, error) {
+func (d base) Insert(q *Qbs) (int64, error) {
 	sql, args := d.dialect.insertSql(q.criteria)
 	result, err := q.Exec(sql, args...)
 	if err != nil {
@@ -213,7 +213,7 @@ func (d base) createTableSql(model *model, ifNotExists bool) string {
 			_, ok := field.value.(string)
 			b = append(b, d.dialect.primaryKeySql(ok, field.size()))
 		} else {
-			b = append(b, d.dialect.sqlType(field.value, field.size()))
+			b = append(b, d.dialect.SqlType(field.value, field.size()))
 			if field.notNull() {
 				b = append(b, "NOT NULL")
 			}
@@ -247,7 +247,7 @@ func (d base) addColumnSql(table, column string, typ interface{}, size int) stri
 		"ALTER TABLE %v ADD COLUMN %v %v",
 		d.dialect.Quote(table),
 		d.dialect.Quote(column),
-		d.dialect.sqlType(typ, size),
+		d.dialect.SqlType(typ, size),
 	)
 }
 
