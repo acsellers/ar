@@ -268,12 +268,12 @@ func (d base) createIndexSql(name, table string, unique bool, columns ...string)
 	return strings.Join(a, " ")
 }
 
-func (d base) columnsInTable(mg *Migration, table interface{}) map[string]bool {
+func (d base) columnsInTable(db *sql.DB, dbName string, table interface{}) map[string]bool {
 	tn := tableName(table)
 	columns := make(map[string]bool)
 	query := "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
-	query = mg.dialect.substituteMarkers(query)
-	rows, err := mg.db.Query(query, mg.dbName, tn)
+	query = d.substituteMarkers(query)
+	rows, err := db.Query(query, mg.dbName, tn)
 	defer rows.Close()
 	if err != nil {
 		panic(err)

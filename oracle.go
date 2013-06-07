@@ -75,7 +75,7 @@ func (d oracle) insertSql(criteria *criteria) (string, []interface{}) {
 	return sql, values
 }
 
-func (d oracle) indexExists(mg *Migration, tableName, indexName string) bool {
+func (d oracle) indexExists(db *sql.DB, dbName, tableName, indexName string) bool {
 	var row *sql.Row
 	var name string
 	query := "SELECT INDEX_NAME FROM USER_INDEXES "
@@ -100,12 +100,12 @@ func (d oracle) substituteMarkers(query string) string {
 	return strings.Join(chunks, "")
 }
 
-func (d oracle) columnsInTable(mg *Migration, table interface{}) map[string]bool {
+func (d oracle) columnsInTable(db *sql.DB, dbName string, table interface{}) map[string]bool {
 	tn := tableName(table)
 	columns := make(map[string]bool)
 	query := "SELECT COLUMN_NAME FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ?"
-	query = mg.dialect.substituteMarkers(query)
-	rows, err := mg.db.Query(query, tn)
+	query = d.substituteMarkers(query)
+	rows, err := db.Query(query, tn)
 	defer rows.Close()
 	if err != nil {
 		panic(err)

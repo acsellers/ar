@@ -40,9 +40,9 @@ type Dialect interface {
 
 	createIndexSql(name, table string, unique bool, columns ...string) string
 
-	indexExists(mg *Migration, tableName string, indexName string) bool
+	indexExists(db *sql.DB, dbName, tableName, indexName string) bool
 
-	columnsInTable(mg *Migration, tableName interface{}) map[string]bool
+	columnsInTable(db *sql.DB, dbName string, tableName interface{}) map[string]bool
 
 	primaryKeySql(isString bool, size int) string
 

@@ -47,11 +47,11 @@ func (d mysql) sqlType(f interface{}, size int) string {
 	panic("invalid sql type")
 }
 
-func (d mysql) indexExists(mg *Migration, tableName, indexName string) bool {
+func (d mysql) indexExists(db *sql.DB, dbName, tableName, indexName string) bool {
 	var row *sql.Row
 	var name string
-	row = mg.db.QueryRow("SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS "+
-		"WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND INDEX_NAME = ?", mg.dbName, tableName, indexName)
+	row = db.QueryRow("SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS "+
+		"WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND INDEX_NAME = ?", dbName, tableName, indexName)
 	row.Scan(&name)
 	return name != ""
 }
