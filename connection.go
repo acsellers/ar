@@ -5,9 +5,10 @@ import (
 )
 
 type Connection struct {
-	DB      *sql.DB
-	Dialect Dialect
-	dbName  string
+	DB        *sql.DB
+	Dialect   Dialect
+	dbName    string
+	txStmtMap map[string]*sql.Stmt
 }
 
 func (c *Connection) IndexExists(table, index string) bool {

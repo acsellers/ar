@@ -7,7 +7,7 @@ import (
 
 func TestMysqlSqlType(t *testing.T) {
 	Within(t, func(test *Test) {
-		d := NewMysql()
+		d := newMysql()
 		test.AreEqual("boolean", d.sqlType(true, 0))
 		var indirect interface{} = true
 		test.AreEqual("boolean", d.sqlType(indirect, 0))

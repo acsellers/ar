@@ -7,21 +7,21 @@ import (
 	"time"
 )
 
-type mysql struct {
+type mysqlDialect struct {
 	base
 }
 
-func NewMysql() Dialect {
-	d := new(mysql)
+func newMysql() Dialect {
+	d := new(mysqlDialect)
 	d.base.dialect = d
 	return d
 }
 
-func (d mysql) parseBool(value reflect.Value) bool {
+func (mysqlDialect) parseBool(value reflect.Value) bool {
 	return value.Int() != 0
 }
 
-func (d mysql) sqlType(f interface{}, size int) string {
+func (d mysqlDialect) sqlType(f interface{}, size int) string {
 	switch f.(type) {
 	case time.Time:
 		return "timestamp"
@@ -47,7 +47,7 @@ func (d mysql) sqlType(f interface{}, size int) string {
 	panic("invalid sql type")
 }
 
-func (d mysql) indexExists(db *sql.DB, dbName, tableName, indexName string) bool {
+func (d mysqlDialect) indexExists(db *sql.DB, dbName, tableName, indexName string) bool {
 	var row *sql.Row
 	var name string
 	row = db.QueryRow("SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS "+
@@ -56,7 +56,7 @@ func (d mysql) indexExists(db *sql.DB, dbName, tableName, indexName string) bool
 	return name != ""
 }
 
-func (d mysql) primaryKeySql(isString bool, size int) string {
+func (d mysqlDialect) primaryKeySql(isString bool, size int) string {
 	if isString {
 		return fmt.Sprintf("varchar(%d) PRIMARY KEY", size)
 	}

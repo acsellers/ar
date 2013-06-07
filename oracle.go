@@ -7,17 +7,17 @@ import (
 	"time"
 )
 
-type oracle struct {
+type oracleDialect struct {
 	base
 }
 
-func NewOracle() Dialect {
-	d := &oracle{}
+func newOracle() Dialect {
+	d := &oracleDialect{}
 	d.base.dialect = d
 	return d
 }
 
-func (d oracle) quote(s string) string {
+func (d oracleDialect) quote(s string) string {
 	sep := "."
 	a := []string{}
 	c := strings.Split(s, sep)
@@ -27,7 +27,7 @@ func (d oracle) quote(s string) string {
 	return strings.Join(a, sep)
 }
 
-func (d oracle) sqlType(f interface{}, size int) string {
+func (d oracleDialect) sqlType(f interface{}, size int) string {
 	switch f.(type) {
 	case time.Time:
 		return "DATE"
@@ -54,7 +54,7 @@ func (d oracle) sqlType(f interface{}, size int) string {
 	panic("invalid sql type")
 }
 
-func (d oracle) insert(q *Qbs) (int64, error) {
+func (d oracleDialect) insert(q *Qbs) (int64, error) {
 	sql, args := d.dialect.insertSql(q.criteria)
 	row := q.QueryRow(sql, args...)
 	value := q.criteria.model.pk.value
@@ -69,13 +69,13 @@ func (d oracle) insert(q *Qbs) (int64, error) {
 	return id, err
 }
 
-func (d oracle) insertSql(criteria *criteria) (string, []interface{}) {
+func (d oracleDialect) insertSql(criteria *criteria) (string, []interface{}) {
 	sql, values := d.base.insertSql(criteria)
 	sql += " RETURNING " + d.dialect.quote(criteria.model.pk.name)
 	return sql, values
 }
 
-func (d oracle) indexExists(db *sql.DB, dbName, tableName, indexName string) bool {
+func (d oracleDialect) indexExists(db *sql.DB, dbName, tableName, indexName string) bool {
 	var row *sql.Row
 	var name string
 	query := "SELECT INDEX_NAME FROM USER_INDEXES "
@@ -86,7 +86,7 @@ func (d oracle) indexExists(db *sql.DB, dbName, tableName, indexName string) boo
 	return name != ""
 }
 
-func (d oracle) substituteMarkers(query string) string {
+func (d oracleDialect) substituteMarkers(query string) string {
 	position := 1
 	chunks := make([]string, 0, len(query)*2)
 	for _, v := range query {
@@ -100,7 +100,7 @@ func (d oracle) substituteMarkers(query string) string {
 	return strings.Join(chunks, "")
 }
 
-func (d oracle) columnsInTable(db *sql.DB, dbName string, table interface{}) map[string]bool {
+func (d oracleDialect) columnsInTable(db *sql.DB, dbName string, table interface{}) map[string]bool {
 	tn := tableName(table)
 	columns := make(map[string]bool)
 	query := "SELECT COLUMN_NAME FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ?"
@@ -120,7 +120,7 @@ func (d oracle) columnsInTable(db *sql.DB, dbName string, table interface{}) map
 	return columns
 }
 
-func (d oracle) primaryKeySql(isString bool, size int) string {
+func (d oracleDialect) primaryKeySql(isString bool, size int) string {
 	if isString {
 		return fmt.Sprintf("VARCHAR2(%d) PRIMARY KEY NOT NULL", size)
 	}
@@ -130,7 +130,7 @@ func (d oracle) primaryKeySql(isString bool, size int) string {
 	return fmt.Sprintf("NUMBER(%d) PRIMARY KEY NOT NULL", size)
 }
 
-func (d oracle) createTableSql(model *model, ifNotExists bool) string {
+func (d oracleDialect) createTableSql(model *model, ifNotExists bool) string {
 	baseSql := d.base.createTableSql(model, false)
 	if _, isString := model.pk.value.(string); isString {
 		return baseSql
@@ -146,12 +146,12 @@ func (d oracle) createTableSql(model *model, ifNotExists bool) string {
 	return baseSql + ";" + sequence + ";" + trigger
 }
 
-func (d oracle) catchMigrationError(err error) bool {
+func (d oracleDialect) catchMigrationError(err error) bool {
 	errString := err.Error()
 	return strings.Contains(errString, "ORA-00955") || strings.Contains(errString, "ORA-00942")
 }
 
-func (d oracle) dropTableSql(table string) string {
+func (d oracleDialect) dropTableSql(table string) string {
 	a := []string{"DROP TABLE"}
 	a = append(a, d.dialect.quote(table))
 	return strings.Join(a, " ")

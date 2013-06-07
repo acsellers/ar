@@ -7,7 +7,7 @@ import (
 
 func TestSqlTypeForOrDialect(t *testing.T) {
 	Within(t, func(test *Test) {
-		d := NewOracle()
+		d := newOracle()
 		test.AreEqual("NUMBER", d.sqlType(uint32(2), 0))
 		test.AreEqual("NUMBER", d.sqlType(int64(1), 0))
 		test.AreEqual("NUMBER(16,2)", d.sqlType(1.8, 0))

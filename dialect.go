@@ -5,6 +5,15 @@ import (
 	"reflect"
 )
 
+var registeredDialects map[string]Dialect
+
+func init() {
+	registeredDialects = make(map[string]Dialect)
+
+	registeredDialects["mysql"] = newMysql()
+	registeredDialects["oracle"] = newOracle()
+}
+
 type Dialect interface {
 
 	//Substitute "?" marker if database use other symbol as marker
