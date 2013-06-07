@@ -1,6 +1,7 @@
 package ar
 
 import (
+	"database/sql"
 	"reflect"
 )
 

@@ -81,7 +81,7 @@ func (d oracle) indexExists(db *sql.DB, dbName, tableName, indexName string) boo
 	query := "SELECT INDEX_NAME FROM USER_INDEXES "
 	query += "WHERE TABLE_NAME = ? AND INDEX_NAME = ?"
 	query = d.substituteMarkers(query)
-	row = mg.db.QueryRow(query, tableName, indexName)
+	row = db.QueryRow(query, tableName, indexName)
 	row.Scan(&name)
 	return name != ""
 }

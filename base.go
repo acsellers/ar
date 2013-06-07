@@ -2,6 +2,7 @@ package ar
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
@@ -273,7 +274,7 @@ func (d base) columnsInTable(db *sql.DB, dbName string, table interface{}) map[s
 	columns := make(map[string]bool)
 	query := "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
 	query = d.substituteMarkers(query)
-	rows, err := db.Query(query, mg.dbName, tn)
+	rows, err := db.Query(query, dbName, tn)
 	defer rows.Close()
 	if err != nil {
 		panic(err)

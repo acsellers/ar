@@ -1,5 +1,9 @@
 package ar
 
+import (
+	"database/sql"
+)
+
 type Connection struct {
 	DB      *sql.DB
 	Dialect Dialect
