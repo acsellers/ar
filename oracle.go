@@ -55,7 +55,7 @@ func (d oracleDialect) SqlType(f interface{}, size int) string {
 }
 
 func (d oracleDialect) Insert(q *Qbs) (int64, error) {
-	sql, args := d.dialect.insertSql(q.criteria)
+	sql, args := d.dialect.InsertSql(q.criteria)
 	row := q.QueryRow(sql, args...)
 	value := q.criteria.model.pk.value
 	var err error
@@ -69,13 +69,13 @@ func (d oracleDialect) Insert(q *Qbs) (int64, error) {
 	return id, err
 }
 
-func (d oracleDialect) insertSql(criteria *criteria) (string, []interface{}) {
-	sql, values := d.base.insertSql(criteria)
+func (d oracleDialect) InsertSql(criteria *criteria) (string, []interface{}) {
+	sql, values := d.base.InsertSql(criteria)
 	sql += " RETURNING " + d.dialect.Quote(criteria.model.pk.name)
 	return sql, values
 }
 
-func (d oracleDialect) indexExists(db *sql.DB, dbName, tableName, indexName string) bool {
+func (d oracleDialect) IndexExists(db *sql.DB, dbName, tableName, indexName string) bool {
 	var row *sql.Row
 	var name string
 	query := "SELECT INDEX_NAME FROM USER_INDEXES "
@@ -100,7 +100,7 @@ func (d oracleDialect) SubstituteMarkers(query string) string {
 	return strings.Join(chunks, "")
 }
 
-func (d oracleDialect) columnsInTable(db *sql.DB, dbName string, table interface{}) map[string]bool {
+func (d oracleDialect) ColumnsInTable(db *sql.DB, dbName string, table interface{}) map[string]bool {
 	tn := tableName(table)
 	columns := make(map[string]bool)
 	query := "SELECT COLUMN_NAME FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ?"
@@ -120,7 +120,7 @@ func (d oracleDialect) columnsInTable(db *sql.DB, dbName string, table interface
 	return columns
 }
 
-func (d oracleDialect) primaryKeySql(isString bool, size int) string {
+func (d oracleDialect) PrimaryKeySql(isString bool, size int) string {
 	if isString {
 		return fmt.Sprintf("VARCHAR2(%d) PRIMARY KEY NOT NULL", size)
 	}
@@ -130,8 +130,8 @@ func (d oracleDialect) primaryKeySql(isString bool, size int) string {
 	return fmt.Sprintf("NUMBER(%d) PRIMARY KEY NOT NULL", size)
 }
 
-func (d oracleDialect) createTableSql(model *model, ifNotExists bool) string {
-	baseSql := d.base.createTableSql(model, false)
+func (d oracleDialect) CreateTableSql(model *model, ifNotExists bool) string {
+	baseSql := d.base.CreateTableSql(model, false)
 	if _, isString := model.pk.value.(string); isString {
 		return baseSql
 	}
@@ -146,12 +146,12 @@ func (d oracleDialect) createTableSql(model *model, ifNotExists bool) string {
 	return baseSql + ";" + sequence + ";" + trigger
 }
 
-func (d oracleDialect) catchMigrationError(err error) bool {
+func (d oracleDialect) CatchMigrationError(err error) bool {
 	errString := err.Error()
 	return strings.Contains(errString, "ORA-00955") || strings.Contains(errString, "ORA-00942")
 }
 
-func (d oracleDialect) dropTableSql(table string) string {
+func (d oracleDialect) DropTableSql(table string) string {
 	a := []string{"DROP TABLE"}
 	a = append(a, d.dialect.Quote(table))
 	return strings.Join(a, " ")

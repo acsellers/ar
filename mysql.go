@@ -47,7 +47,7 @@ func (d mysqlDialect) SqlType(f interface{}, size int) string {
 	panic("invalid sql type")
 }
 
-func (d mysqlDialect) indexExists(db *sql.DB, dbName, tableName, indexName string) bool {
+func (d mysqlDialect) IndexExists(db *sql.DB, dbName, tableName, indexName string) bool {
 	var row *sql.Row
 	var name string
 	row = db.QueryRow("SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS "+
@@ -56,7 +56,7 @@ func (d mysqlDialect) indexExists(db *sql.DB, dbName, tableName, indexName strin
 	return name != ""
 }
 
-func (d mysqlDialect) primaryKeySql(isString bool, size int) string {
+func (d mysqlDialect) PrimaryKeySql(isString bool, size int) string {
 	if isString {
 		return fmt.Sprintf("varchar(%d) PRIMARY KEY", size)
 	}

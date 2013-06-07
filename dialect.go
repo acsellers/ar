@@ -40,29 +40,29 @@ type Dialect interface {
 
 	Insert(q *Qbs) (int64, error)
 
-	insertSql(criteria *criteria) (sql string, args []interface{})
+	InsertSql(criteria *criteria) (sql string, args []interface{})
 
-	update(q *Qbs) (int64, error)
+	Update(q *Qbs) (int64, error)
 
-	updateSql(criteria *criteria) (string, []interface{})
+	UpdateSql(criteria *criteria) (string, []interface{})
 
-	delete(q *Qbs) (int64, error)
+	Delete(q *Qbs) (int64, error)
 
-	deleteSql(criteria *criteria) (string, []interface{})
+	DeleteSql(criteria *criteria) (string, []interface{})
 
-	createTableSql(model *model, ifNotExists bool) string
+	CreateTableSql(model *model, ifNotExists bool) string
 
-	dropTableSql(table string) string
+	DropTableSql(table string) string
 
-	addColumnSql(table, column string, typ interface{}, size int) string
+	AddColumnSql(table, column string, typ interface{}, size int) string
 
-	createIndexSql(name, table string, unique bool, columns ...string) string
+	CreateIndexSql(name, table string, unique bool, columns ...string) string
 
-	indexExists(db *sql.DB, dbName, tableName, indexName string) bool
+	IndexExists(db *sql.DB, dbName, tableName, indexName string) bool
 
-	columnsInTable(db *sql.DB, dbName string, tableName interface{}) map[string]bool
+	ColumnsInTable(db *sql.DB, dbName string, tableName interface{}) map[string]bool
 
-	primaryKeySql(isString bool, size int) string
+	PrimaryKeySql(isString bool, size int) string
 
-	catchMigrationError(err error) bool
+	CatchMigrationError(err error) bool
 }

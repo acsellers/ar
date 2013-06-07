@@ -450,7 +450,7 @@ func (q *Qbs) Save(structPtr interface{}) (affected int64, err error) {
 	createdModelField := model.timeFiled("created")
 	var isInsert bool
 	if !model.pkZero() && q.WhereEqual(model.pk.name, model.pk.value).Count(model.table) > 0 { //id is given, can be an update operation.
-		affected, err = q.Dialect.update(q)
+		affected, err = q.Dialect.Update(q)
 	} else {
 		if createdModelField != nil {
 			createdModelField.value = now
@@ -541,7 +541,7 @@ func (q *Qbs) Update(structPtr interface{}) (affected int64, err error) {
 	if q.criteria.condition == nil {
 		panic("Can not update without condition")
 	}
-	return q.Dialect.update(q)
+	return q.Dialect.Update(q)
 }
 
 // The delete condition can be inferred by the Id value of the struct
@@ -553,7 +553,7 @@ func (q *Qbs) Delete(structPtr interface{}) (affected int64, err error) {
 	if q.criteria.condition == nil {
 		panic("Can not delete without condition")
 	}
-	return q.Dialect.delete(q)
+	return q.Dialect.Delete(q)
 }
 
 // This method can be used to validate unique column before trying to save

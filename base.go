@@ -128,7 +128,7 @@ func (d base) QuerySql(criteria *criteria) (string, []interface{}) {
 }
 
 func (d base) Insert(q *Qbs) (int64, error) {
-	sql, args := d.dialect.insertSql(q.criteria)
+	sql, args := d.dialect.InsertSql(q.criteria)
 	result, err := q.Exec(sql, args...)
 	if err != nil {
 		return -1, err
@@ -140,7 +140,7 @@ func (d base) Insert(q *Qbs) (int64, error) {
 	return id, nil
 }
 
-func (d base) insertSql(criteria *criteria) (string, []interface{}) {
+func (d base) InsertSql(criteria *criteria) (string, []interface{}) {
 	columns, values := criteria.model.columnsAndValues(false)
 	quotedColumns := make([]string, 0, len(columns))
 	markers := make([]string, 0, len(columns))
@@ -157,8 +157,8 @@ func (d base) insertSql(criteria *criteria) (string, []interface{}) {
 	return sql, values
 }
 
-func (d base) update(q *Qbs) (int64, error) {
-	sql, args := d.dialect.updateSql(q.criteria)
+func (d base) Update(q *Qbs) (int64, error) {
+	sql, args := d.dialect.UpdateSql(q.criteria)
 	result, err := q.Exec(sql, args...)
 	if err != nil {
 		return 0, err
@@ -167,7 +167,7 @@ func (d base) update(q *Qbs) (int64, error) {
 	return affected, err
 }
 
-func (d base) updateSql(criteria *criteria) (string, []interface{}) {
+func (d base) UpdateSql(criteria *criteria) (string, []interface{}) {
 	columns, values := criteria.model.columnsAndValues(true)
 	pairs := make([]string, 0, len(columns))
 	for _, column := range columns {
@@ -184,8 +184,8 @@ func (d base) updateSql(criteria *criteria) (string, []interface{}) {
 	return sql, values
 }
 
-func (d base) delete(q *Qbs) (int64, error) {
-	sql, args := d.dialect.deleteSql(q.criteria)
+func (d base) Delete(q *Qbs) (int64, error) {
+	sql, args := d.dialect.DeleteSql(q.criteria)
 	result, err := q.Exec(sql, args...)
 	if err != nil {
 		return 0, err
@@ -193,13 +193,13 @@ func (d base) delete(q *Qbs) (int64, error) {
 	return result.RowsAffected()
 }
 
-func (d base) deleteSql(criteria *criteria) (string, []interface{}) {
+func (d base) DeleteSql(criteria *criteria) (string, []interface{}) {
 	conditionSql, args := criteria.condition.Merge()
 	sql := "DELETE FROM " + d.dialect.Quote(criteria.model.table) + " WHERE " + conditionSql
 	return sql, args
 }
 
-func (d base) createTableSql(model *model, ifNotExists bool) string {
+func (d base) CreateTableSql(model *model, ifNotExists bool) string {
 	a := []string{"CREATE TABLE "}
 	if ifNotExists {
 		a = append(a, "IF NOT EXISTS ")
@@ -211,7 +211,7 @@ func (d base) createTableSql(model *model, ifNotExists bool) string {
 		}
 		if field.pk {
 			_, ok := field.value.(string)
-			b = append(b, d.dialect.primaryKeySql(ok, field.size()))
+			b = append(b, d.dialect.PrimaryKeySql(ok, field.size()))
 		} else {
 			b = append(b, d.dialect.SqlType(field.value, field.size()))
 			if field.notNull() {
@@ -236,13 +236,13 @@ func (d base) createTableSql(model *model, ifNotExists bool) string {
 	return strings.Join(a, "")
 }
 
-func (d base) dropTableSql(table string) string {
+func (d base) DropTableSql(table string) string {
 	a := []string{"DROP TABLE IF EXISTS"}
 	a = append(a, d.dialect.Quote(table))
 	return strings.Join(a, " ")
 }
 
-func (d base) addColumnSql(table, column string, typ interface{}, size int) string {
+func (d base) AddColumnSql(table, column string, typ interface{}, size int) string {
 	return fmt.Sprintf(
 		"ALTER TABLE %v ADD COLUMN %v %v",
 		d.dialect.Quote(table),
@@ -251,7 +251,7 @@ func (d base) addColumnSql(table, column string, typ interface{}, size int) stri
 	)
 }
 
-func (d base) createIndexSql(name, table string, unique bool, columns ...string) string {
+func (d base) CreateIndexSql(name, table string, unique bool, columns ...string) string {
 	a := []string{"CREATE"}
 	if unique {
 		a = append(a, "UNIQUE")
@@ -269,7 +269,7 @@ func (d base) createIndexSql(name, table string, unique bool, columns ...string)
 	return strings.Join(a, " ")
 }
 
-func (d base) columnsInTable(db *sql.DB, dbName string, table interface{}) map[string]bool {
+func (d base) ColumnsInTable(db *sql.DB, dbName string, table interface{}) map[string]bool {
 	tn := tableName(table)
 	columns := make(map[string]bool)
 	query := "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
@@ -289,6 +289,6 @@ func (d base) columnsInTable(db *sql.DB, dbName string, table interface{}) map[s
 	return columns
 }
 
-func (d base) catchMigrationError(err error) bool {
+func (d base) CatchMigrationError(err error) bool {
 	return false
 }
