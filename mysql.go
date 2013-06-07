@@ -62,3 +62,7 @@ func (d mysqlDialect) PrimaryKeySql(isString bool, size int) string {
 	}
 	return "bigint PRIMARY KEY AUTO_INCREMENT"
 }
+
+func (mysqlDialect) SqlName() string {
+	return "mysql"
+}

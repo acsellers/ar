@@ -65,4 +65,6 @@ type Dialect interface {
 	PrimaryKeySql(isString bool, size int) string
 
 	CatchMigrationError(err error) bool
+
+	SqlName() string
 }

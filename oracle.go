@@ -156,3 +156,7 @@ func (d oracleDialect) DropTableSql(table string) string {
 	a = append(a, d.dialect.Quote(table))
 	return strings.Join(a, " ")
 }
+
+func (oracleDialect) SqlName() string {
+	return "oracle"
+}
