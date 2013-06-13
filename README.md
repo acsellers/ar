@@ -7,7 +7,7 @@ a library written, just need to include the library)
 * Move to a ARConnection that you call once and then use in a threadsafe 
 manner, instead of the get new QBS thing.
 * Better documentation in the code (plus examples)
-* Scopes?
+* Scopes and Named Scopes
 
 ##Exising Features from qbs
 
