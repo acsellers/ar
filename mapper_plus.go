@@ -4,7 +4,7 @@ import "reflect"
 
 type MapperPlus struct {
 	model *model
-	query *MapperPlus
+	query *Queryable
 }
 
 func (mp *MapperPlus) Identity() *MapperPlus {

@@ -84,6 +84,7 @@ type model struct {
 	Fields  []*fieldInfo
 	refs    map[string]*reference
 	indexes Indexes
+	conn    *Connection
 }
 
 type reference struct {
