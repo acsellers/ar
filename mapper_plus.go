@@ -1,7 +1,5 @@
 package ar
 
-import "reflect"
-
 type MapperPlus struct {
 	model *model
 	query *Queryable

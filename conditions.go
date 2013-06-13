@@ -1,6 +1,7 @@
 package ar
 
 import (
+	"reflect"
 	"strings"
 )
 
@@ -16,14 +17,14 @@ type orCondition struct {
 
 func (oc *orCondition) String() string {
 	conds := make([]string, len(oc.conditions))
-	for _, condition := range oc.conditions {
+	for i, condition := range oc.conditions {
 		conds[i] = condition.String()
 	}
 	return "(" + strings.Join(conds, " OR ") + ")"
 }
 func (oc *orCondition) Fragment() string {
 	conds := make([]string, len(oc.conditions))
-	for _, condition := range oc.conditions {
+	for i, condition := range oc.conditions {
 		conds[i] = condition.Fragment()
 	}
 	return "(" + strings.Join(conds, " OR ") + ")"
@@ -45,14 +46,14 @@ type andCondition struct {
 
 func (ac *andCondition) String() string {
 	conds := make([]string, len(ac.conditions))
-	for _, condition := range ac.conditions {
+	for i, condition := range ac.conditions {
 		conds[i] = condition.String()
 	}
 	return "(" + strings.Join(conds, " AND ") + ")"
 }
 func (ac *andCondition) Fragment() string {
 	conds := make([]string, len(ac.conditions))
-	for _, condition := range ac.conditions {
+	for i, condition := range ac.conditions {
 		conds[i] = condition.Fragment()
 	}
 	return "(" + strings.Join(conds, " AND ") + ")"
@@ -107,7 +108,7 @@ func (ec *equalCondition) String() string {
 	return withVars(ec.Fragment(), ec.Values())
 }
 func (ec *equalCondition) Fragment() string {
-	if isNil(val) {
+	if isNil(ec.val) {
 		return ec.column + "IS NULL"
 	}
 	return ec.column + " = ?"
@@ -132,7 +133,7 @@ func (wc *whereCondition) String() string {
 	}
 }
 func (wc *whereCondition) Fragment() string {
-	if len(args) == 1 && isBindVars(args[0]) {
+	if len(wc.args) == 1 && isBindVars(wc.args[0]) {
 		return unbind(wc.fragment)
 	}
 
@@ -154,9 +155,12 @@ func withVars(sqlFragment string, vals []interface{}) string {
 }
 
 func isNil(v interface{}) bool {
-
+	return v == nil || reflect.ValueOf(v).IsNil()
 }
 
+func isBindVars(v interface{}) bool {
+	return reflect.TypeOf(v).Kind() == reflect.Map
+}
 func bindedWith(sqlFragment string, bindVals interface{}) string {
 
 }
@@ -165,5 +169,5 @@ func unbind(sqlFragment string) string {
 
 }
 
-func outputBindsInOrder(sqlFragment string, bindVals interface{}) string {
+func outputBindsInOrder(sqlFragment string, bindVals interface{}) []interface{} {
 }

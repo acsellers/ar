@@ -21,25 +21,25 @@ func (q *Queryable) Identity() *Queryable {
 
 func (q *Queryable) Where(fragment string, args ...interface{}) *Queryable {
 	nq := q.Identity()
-	nq.conditions = append(nq.conditions, whereCondition{fragment, vals})
+	nq.conditions = append(nq.conditions, &whereCondition{fragment, args})
 	return nq
 }
 
 func (q *Queryable) EqualTo(column string, val interface{}) *Queryable {
 	nq := q.Identity()
-	nq.conditions = append(nq.conditions, equalCondition{column, val})
+	nq.conditions = append(nq.conditions, &equalCondition{column, val})
 	return nq
 }
 
 func (q *Queryable) Between(column string, lower, upper interface{}) *Queryable {
 	nq := q.Identity()
-	nq.conditions = append(nq.conditions, betweenCondition{column, lower, upper})
+	nq.conditions = append(nq.conditions, &betweenCondition{column, lower, upper})
 	return nq
 }
 
 func (q *Queryable) In(column string, vals []interface{}) *Queryable {
 	nq := q.Identity()
-	nq.conditions = append(nq.conditions, inCondition{column, vals})
+	nq.conditions = append(nq.conditions, &inCondition{column, vals})
 	return nq
 }
 
@@ -64,13 +64,13 @@ func (q *Queryable) OrderBy(column, direction string) *Queryable {
 func (q *Queryable) Order(ordering string) *Queryable {
 	nq := q.Identity()
 	nq.order = append(nq.order, ordering)
-	return r
+	return nq
 }
 
 func (q *Queryable) Reorder(ordering string) *Queryable {
 	nq := q.Identity()
 	nq.order = []string{ordering}
-	return r
+	return nq
 }
 
 // Find looks for the record with primary key equal to val
