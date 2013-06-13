@@ -4,62 +4,54 @@ import "reflect"
 
 type MapperPlus struct {
 	model *model
+	query *MapperPlus
 }
 
 func (mp *MapperPlus) Identity() *MapperPlus {
-	return
-}
-func (mp *MapperPlus) Add() *MapperPlus {
-	return &MapperPlus{val: mp.val, ops: append(mp.ops, "add")}
-}
-func (mp *MapperPlus) Sub() *MapperPlus {
-	return &MapperPlus{val: mp.val, ops: append(mp.ops, "sub")}
-}
-func (mp *MapperPlus) Exec() string {
-	output := fmt.Sprint(mp.val)
-	for _, op := range mp.ops {
-		output = fmt.Sprintf("%s(%s)", op, output)
+	if mp.query != nil {
+		return &MapperPlus{model: mp.model, query: mp.query}
 	}
 
-	return output
-}
-func (mp *MapperPlus) Init(nmp *MapperPlus) {
-	mp.val = nmp.val
-}
-func InitMapperPlus(v interface{}) {
-	rv := reflect.ValueOf(v).Elem()
-	fv := rv.Field(0)
-	mp := new(MapperPlus)
-	mp.val = 246
-	vmp := reflect.ValueOf(mp)
-
-	if fv.Type().Kind() == reflect.Ptr {
-		fv.Set(vmp)
-	}
+	return &MapperPlus{model: mp.model, query: &Queryable{model: mp.model}}
 }
 
-// end ar library
-
-//start model code
-type UserMapper struct {
-	*MapperPlus
+func (mp *MapperPlus) Where(fragment string, args ...interface{}) *MapperPlus {
+	return &MapperPlus{model: mp.model, query: mp.query.Where(fragment, args...)}
 }
 
-func (m *UserMapper) ASA() *UserMapper {
-	return &UserMapper{m.Add().Sub().Add()}
-}
-func (m *UserMapper) SS() *UserMapper {
-	return &UserMapper{m.Sub().Sub()}
+func (mp *MapperPlus) EqualTo(column string, val interface{}) *MapperPlus {
+	return &MapperPlus{model: mp.model, query: mp.query.EqualTo(column, val)}
 }
 
-var User = new(UserMapper)
-
-func init() {
-	InitMapperPlus(User)
+func (mp *MapperPlus) Between(column string, lower, upper interface{}) *MapperPlus {
+	return &MapperPlus{model: mp.model, query: mp.query.Between(column, lower, upper)}
 }
 
-// end model code
+func (mp *MapperPlus) In(column string, vals []interface{}) *MapperPlus {
+	return &MapperPlus{model: mp.model, query: mp.query.In(column, vals)}
+}
 
-func main() {
-	fmt.Println(User.ASA().SS().Exec())
+func (mp *MapperPlus) Limit(limit int) *MapperPlus {
+	return &MapperPlus{model: mp.model, query: mp.query.Limit(limit)}
+}
+
+func (mp *MapperPlus) Offset(offset int) *MapperPlus {
+	return &MapperPlus{model: mp.model, query: mp.query.Offset(offset)}
+}
+
+func (mp *MapperPlus) OrderBy(column, direction string) *MapperPlus {
+	return &MapperPlus{model: mp.model, query: mp.query.OrderBy(column, direction)}
+}
+
+func (mp *MapperPlus) Order(ordering string) *MapperPlus {
+	return &MapperPlus{model: mp.model, query: mp.query.Order(ordering)}
+}
+
+func (mp *MapperPlus) Reorder(ordering string) *MapperPlus {
+	return &MapperPlus{model: mp.model, query: mp.query.Reorder(ordering)}
+}
+
+// Find looks for the record with primary key equal to val
+func (mp *MapperPlus) Find(val interface{}) *MapperPlus {
+	return &MapperPlus{model: mp.model, query: mp.query.Find(val)}
 }

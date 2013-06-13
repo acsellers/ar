@@ -8,7 +8,7 @@ type Mapper struct {
 // in this way, the different Queryable methods are simply
 // implemented in the manner mapper.Identity().Method().
 func (m *Mapper) Identity() *Queryable {
-	return &Queryable{source: m}
+	return &Queryable{model: m.model}
 }
 
 func (m *Mapper) Where(fragment string, args ...interface{}) *Queryable {

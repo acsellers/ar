@@ -1,7 +1,7 @@
 package ar
 
 type Queryable struct {
-	source *Mapper
+	model *model
 }
 
 // Identity is a no-op, but it is kept to maintain parity
