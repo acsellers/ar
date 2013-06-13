@@ -81,6 +81,7 @@ type model struct {
 	pk      *modelField
 	table   string
 	fields  []*modelField
+	Fields  []*fieldInfo
 	refs    map[string]*reference
 	indexes Indexes
 }
