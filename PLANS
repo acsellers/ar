@@ -1,0 +1,78 @@
+Scheduling
+  Each new version goes to rc when each set feature is done and tested.
+  RC's run for 2 weeks, until no more regressions are found, or known 
+  regressions are determined to be necessary breakage.
+  0.1-0.4 should be fairly API compatible, with 0.4 being allowed to 
+  better define some interactions chan
+Versions
+  0.1 (Cheap Hotel)
+    - ar
+      - Mapping struct to tables
+      - Parameterized and bind variables
+      - Scopable queries
+      - Named scopable queries on mappers
+      - Prepared Statement cache
+    - docs
+      - Full method documentation
+      - Examples for both mappers
+      - Blog tutorial (01)
+        - Posts
+        - Comments
+
+  0.2 (The Sprawl)
+    - ar
+      - nested mappable structs
+      - Mapping arbitrary sql
+      - Validators
+      - virtual fields (awesome)
+      - autoloading related structs
+      - default scopes
+      - local connections
+    - tools
+      - arm Migrator
+      - art Translator
+    - docs
+      - Calendar (02)
+      - SSO (03)
+  0.3 (Istanbul)
+    - ar
+      - scopable cache
+      - output cache
+      - performance improvements
+      - Lifecycle Management
+    - docs
+      - Store Reporting (04)
+      - School Gradebook (05)
+  0.4 (Zion)
+    - ar
+      - Missing features
+      - Simple Breaking API changes
+    - tools
+      - arb Backup & Restore
+    - docs
+      - To be determined (06)
+      - To be determined (07)
+
+  0.5 (Marcus Garvey)
+    - ar
+      - Major breaking api changes
+      - Auto sharding (if possible)
+    - tools
+      - ars Shard Migrator (if possible)
+      - arf ar fix & ar vet
+    - docs
+      - Best Practices
+      - Performance Tuning
+      - To Be Determined (08)
+
+  0.6 (Freeside)
+    - ar
+      - Stabilize 0.5 breaking changes
+      - Refactor code as necessary
+      - Performance Improvements
+      - Improve code coverage of tests
+
+  1.0 (Straylight)
+    - API stability and good performance
+
+  1.1+ (New Theme TBA)
