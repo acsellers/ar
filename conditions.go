@@ -1,6 +1,8 @@
 package ar
 
 import (
+	"bufio"
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -161,8 +163,70 @@ func isNil(v interface{}) bool {
 func isBindVars(v interface{}) bool {
 	return reflect.TypeOf(v).Kind() == reflect.Map
 }
-func bindedWith(sqlFragment string, bindVals interface{}) string {
 
+func bindedWith(sqlFragment string, bindVals interface{}) string {
+	output := make([]string, 0)
+	bind := makeBinder(bindVals)
+
+	for _, fragment := range piecewiseSplit(sqlFragment) {
+		if isBinder(fragment) {
+			output = append(output, fmt.Sprint(bind.Get(fragment)))
+		} else {
+			output = append(output, fragment)
+		}
+	}
+	return strings.Join(output, " ")
+}
+
+func isBinder(fragment string) bool {
+	return fragment[0] == ':' && fragment[len(fragment)-1] == ':'
+}
+
+func makeBinder(v interface{}) *binder {
+	rv := reflect.ValueOf(v)
+	b := new(binder)
+	if rv.Type().Kind() == reflect.Map {
+		b.mapValue = rv
+		b.useful = true
+	}
+	return b
+}
+
+type binder struct {
+	mapValue reflect.Value
+	useful   bool
+}
+
+func (b *binder) Get(item string) interface{} {
+	if b.useful {
+		vv := b.mapValue.MapIndex(reflect.ValueOf(strings.Trim(item, ":")))
+		if vv.IsValid() {
+			return vv.Interface()
+		}
+	}
+	return item
+}
+
+func piecewiseSplit(sqlFragment string) []string {
+	scanner := bufio.NewScanner(strings.NewReader(sqlFragment))
+	scanner.Split(bufio.ScanWords)
+
+	var output []string
+	var current string
+
+	for scanner.Scan() {
+		if isBinder(scanner.Text()) {
+			output = append(output, current, scanner.Text())
+			current = ""
+		} else {
+			current = current + " " + scanner.Text()
+		}
+	}
+	if current != "" {
+		output = append(output, current)
+	}
+
+	return output
 }
 
 func unbind(sqlFragment string) string {
