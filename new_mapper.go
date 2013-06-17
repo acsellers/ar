@@ -16,7 +16,7 @@ func (c *Connection) CreateMapperPlus(v interface{}) {
 	rv := reflect.ValueOf(v).Elem()
 	fv := rv.Field(0)
 	mp := new(MapperPlus)
-	mp.model = createModelFor(v)
+	//mp.model = createModelFor(v)
 	vmp := reflect.ValueOf(mp)
 	if fv.Type().Kind() == reflect.Ptr {
 		fv.Set(vmp)

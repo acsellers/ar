@@ -32,13 +32,14 @@ func (oc *orCondition) Fragment() string {
 	return "(" + strings.Join(conds, " OR ") + ")"
 }
 func (oc *orCondition) Values() []interface{} {
-	vals := make([]interface{}, 0, len(oc.conditions))
+	var vals []interface{}
 	for _, condition := range oc.conditions {
 		val := condition.Values()
 		if len(val) > 0 {
-			vals = append(vals, val)
+			vals = append(vals, val...)
 		}
 	}
+
 	return vals
 }
 
@@ -65,7 +66,7 @@ func (ac *andCondition) Values() []interface{} {
 	for _, condition := range ac.conditions {
 		val := condition.Values()
 		if len(val) > 0 {
-			vals = append(vals, val)
+			vals = append(vals, val...)
 		}
 	}
 	return vals
@@ -77,10 +78,10 @@ type inCondition struct {
 }
 
 func (ic *inCondition) String() string {
-	return withVars(ic.column+" IN ?", []interface{}{ic.vals})
+	return withVars(ic.column+" IN (?)", []interface{}{ic.vals})
 }
 func (ic *inCondition) Fragment() string {
-	return ic.column + " IN [?]"
+	return ic.column + " IN (?)"
 }
 func (ic *inCondition) Values() []interface{} {
 	return []interface{}{ic.vals}
@@ -152,12 +153,110 @@ func (wc *whereCondition) Values() []interface{} {
 	return wc.args
 }
 
-func withVars(sqlFragment string, vals []interface{}) string {
+type varyCondition struct {
+	column string
+	cond   int
+	val    interface{}
+}
+
+func (vc *varyCondition) String() string {
+	switch vc.cond {
+	case EQUAL:
+		if isNil(vc.val) {
+			return vc.column + " IS NULL"
+		}
+		return vc.column + " = " + fmt.Sprint(vc.val)
+	case NOT_EQUAL:
+		if isNil(vc.val) {
+			return vc.column + " IS NOT NULL"
+		}
+		return vc.column + " <> " + fmt.Sprint(vc.val)
+	case LESS_THAN:
+		return vc.column + " < " + fmt.Sprint(vc.val)
+	case LESS_OR_EQUAL:
+		return vc.column + " <= " + fmt.Sprint(vc.val)
+	case GREATER_THAN:
+		return vc.column + " > " + fmt.Sprint(vc.val)
+	case GREATER_OR_EQUAL:
+		return vc.column + " >= " + fmt.Sprint(vc.val)
+	}
+
 	return ""
 }
 
+func (vc *varyCondition) Fragment() string {
+	switch vc.cond {
+	case EQUAL:
+		if isNil(vc.val) {
+			return vc.column + " IS NULL"
+		}
+		return vc.column + " = ?"
+	case NOT_EQUAL:
+		if isNil(vc.val) {
+			return vc.column + " IS NOT NULL"
+		}
+		return vc.column + " <> ?"
+	case LESS_THAN:
+		return vc.column + " < ?"
+	case LESS_OR_EQUAL:
+		return vc.column + " <= ?"
+	case GREATER_THAN:
+		return vc.column + " > ?"
+	case GREATER_OR_EQUAL:
+		return vc.column + " >= ?"
+	}
+
+	return ""
+}
+
+func (vc *varyCondition) Values() []interface{} {
+	if isNil(vc.val) {
+		return []interface{}{}
+	}
+	return []interface{}{vc.val}
+}
+func withVars(sqlFragment string, vals []interface{}) string {
+	input := strings.Split(sqlFragment, "?")
+	output := []byte{}
+	for i, subInput := range input {
+		output = append(output, []byte(subInput)...)
+		if i < len(vals) {
+			if isArray(vals[i]) {
+				output = append(output, []byte(printArray(vals[i]))...)
+			} else {
+				output = append(output, []byte(fmt.Sprint(vals[i]))...)
+			}
+		}
+	}
+	return string(output)
+}
+
 func isNil(v interface{}) bool {
-	return v == nil || reflect.ValueOf(v).IsNil()
+	return v == nil || (couldBeNil(v) && reflect.ValueOf(v).IsNil())
+}
+
+func couldBeNil(v interface{}) bool {
+	kind := reflect.TypeOf(v).Kind()
+	return kind == reflect.Slice || kind == reflect.Ptr || kind == reflect.Map
+}
+
+func isArray(v interface{}) bool {
+	kind := reflect.TypeOf(v).Kind()
+	return kind == reflect.Slice || kind == reflect.Array
+}
+
+func printArray(v interface{}) string {
+	vType := reflect.TypeOf(v)
+	vValue := reflect.ValueOf(v)
+	if vType.Kind() == reflect.Slice || vType.Kind() == reflect.Array {
+		output := make([]string, vValue.Len())
+		for i := 0; i < vValue.Len(); i++ {
+			output[i] = fmt.Sprint(vValue.Index(i).Interface())
+		}
+		return strings.Join(output, ",")
+	}
+
+	return fmt.Sprint(v)
 }
 
 func isBindVars(v interface{}) bool {
@@ -230,8 +329,27 @@ func piecewiseSplit(sqlFragment string) []string {
 }
 
 func unbind(sqlFragment string) string {
+	scanner := bufio.NewScanner(strings.NewReader(sqlFragment))
+	scanner.Split(bufio.ScanWords)
 
+	var output []string
+	var current string
+
+	for scanner.Scan() {
+		if isBinder(scanner.Text()) {
+			output = append(output, current, " ?")
+			current = ""
+		} else {
+			current = current + " " + scanner.Text()
+		}
+	}
+	if current != "" {
+		output = append(output, current)
+	}
+
+	return strings.Join(output, " ")
 }
 
 func outputBindsInOrder(sqlFragment string, bindVals interface{}) []interface{} {
+	return []interface{}{}
 }

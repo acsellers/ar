@@ -1,5 +1,16 @@
 package ar
 
+import "fmt"
+
+const (
+	EQUAL = iota
+	NOT_EQUAL
+	LESS_THAN
+	LESS_OR_EQUAL
+	GREATER_THAN
+	GREATER_OR_EQUAL
+)
+
 type Queryable struct {
 	model      *model
 	order      []string
@@ -8,14 +19,14 @@ type Queryable struct {
 	conditions []condition
 }
 
-// Identity is a no-op, but it is kept to maintain parity
-// between mapper and queryable
+// Identity is the way to clone a Queryable, it is used everywhere
 func (q *Queryable) Identity() *Queryable {
 	return &Queryable{
-		model:  q.model,
-		order:  q.order,
-		offset: q.offset,
-		limit:  q.limit,
+		model:      q.model,
+		order:      q.order,
+		offset:     q.offset,
+		limit:      q.limit,
+		conditions: q.conditions,
 	}
 }
 
@@ -40,6 +51,13 @@ func (q *Queryable) Between(column string, lower, upper interface{}) *Queryable 
 func (q *Queryable) In(column string, vals []interface{}) *Queryable {
 	nq := q.Identity()
 	nq.conditions = append(nq.conditions, &inCondition{column, vals})
+	return nq
+}
+
+func (q *Queryable) Cond(column string, condition int, val ...interface{}) *Queryable {
+	nq := q.Identity()
+	nq.conditions = append(nq.conditions, &varyCondition{column, condition, val})
+
 	return nq
 }
 
@@ -77,6 +95,6 @@ func (q *Queryable) Reorder(ordering string) *Queryable {
 func (q *Queryable) Find(val interface{}) *Queryable {
 	nq := q.Identity()
 	nq.conditions = append(q.conditions,
-		equalCondition{q.model.pk.String(), val})
+		&equalCondition{fmt.Sprint(q.model.pk), val})
 	return nq
 }
