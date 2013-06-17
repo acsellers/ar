@@ -138,7 +138,47 @@ func TestAndCondition(t *testing.T) {
 		)
 	})
 }
-func TestWhereCondition(t *testing.T) {
+func TestWhereConditionSimple(t *testing.T) {
 	Within(t, func(test *Test) {
+		test.Section("Setup Where Condition")
+		wc := &whereCondition{"users.id <> (?)", []interface{}{[]interface{}{1, 2, 3, 4, 5}}}
+		test.AreEqual(wc.Values(), []interface{}{[]interface{}{1, 2, 3, 4, 5}})
+
+		test.Section("Test Where SQL")
+		test.AreEqual(wc.Fragment(), "users.id <> (?)")
+
+		test.Section("Test Where Log")
+		test.AreEqual(wc.String(), "users.id <> (1,2,3,4,5)")
 	})
+}
+
+func TestWhereConditionMulti(t *testing.T) {
+	Within(t, func(test *Test) {
+		test.Section("Setup Where Condition")
+		wc := &whereCondition{"users.id BETWEEN ? AND ? OR users.id > ?", []interface{}{1, 5, 40}}
+		test.AreEqual(wc.Values(), []interface{}{1, 5, 40})
+
+		test.Section("Test Where SQL")
+		test.AreEqual(wc.Fragment(), "users.id BETWEEN ? AND ? OR users.id > ?")
+
+		test.Section("Test Where Log")
+		test.AreEqual(wc.String(), "users.id BETWEEN 1 AND 5 OR users.id > 40")
+	})
+}
+
+func TestWhereConditionBinding(t *testing.T) {
+	Within(t, func(test *Test) {
+		test.Section("Setup Where Condition")
+		wc := &whereCondition{"users.id BETWEEN :lower: AND :upper: OR users.id > :dangerous:",
+			[]interface{}{map[string]interface{}{"lower": 1, "upper": 5, "dangerous": 40}},
+		}
+		test.AreEqual(wc.Values(), []interface{}{1, 5, 40})
+
+		test.Section("Test Where SQL")
+		test.AreEqual(wc.Fragment(), "users.id BETWEEN ? AND ? OR users.id > ?")
+
+		test.Section("Test Where Log")
+		test.AreEqual(wc.String(), "users.id BETWEEN 1 AND 5 OR users.id > 40")
+	})
+
 }

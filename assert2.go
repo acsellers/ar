@@ -83,7 +83,11 @@ func (test *Test) AreEqual(x, y interface{}, msgs ...interface{}) {
 	if !(reflect.DeepEqual(x, y) || strEqual(x, y)) {
 		test.logDetails()
 		test.T.Log("Equality check failed")
-		test.T.Error(msgs...)
+		if len(msgs) > 0 {
+			test.T.Error(msgs...)
+		} else {
+			test.T.Error(x, "!=", y)
+		}
 	}
 }
 func (test *Test) AreNotEqual(x, y interface{}, msgs ...interface{}) {
