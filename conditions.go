@@ -311,14 +311,16 @@ func piecewiseSplit(sqlFragment string) []string {
 	scanner.Split(bufio.ScanWords)
 
 	var output []string
-	var current string
+	var current, seperator string
 
 	for scanner.Scan() {
 		if isBinder(scanner.Text()) {
 			output = append(output, current, scanner.Text())
 			current = ""
+			seperator = ""
 		} else {
-			current = current + " " + scanner.Text()
+			current = current + seperator + scanner.Text()
+			seperator = " "
 		}
 	}
 	if current != "" {
@@ -329,27 +331,27 @@ func piecewiseSplit(sqlFragment string) []string {
 }
 
 func unbind(sqlFragment string) string {
-	scanner := bufio.NewScanner(strings.NewReader(sqlFragment))
-	scanner.Split(bufio.ScanWords)
+	output := make([]string, 0)
 
-	var output []string
-	var current string
-
-	for scanner.Scan() {
-		if isBinder(scanner.Text()) {
-			output = append(output, current, " ?")
-			current = ""
+	for _, fragment := range piecewiseSplit(sqlFragment) {
+		if isBinder(fragment) {
+			output = append(output, "?")
 		} else {
-			current = current + " " + scanner.Text()
+			output = append(output, fragment)
 		}
 	}
-	if current != "" {
-		output = append(output, current)
-	}
-
 	return strings.Join(output, " ")
 }
 
 func outputBindsInOrder(sqlFragment string, bindVals interface{}) []interface{} {
-	return []interface{}{}
+	output := make([]interface{}, 0)
+	bind := makeBinder(bindVals)
+
+	for _, fragment := range piecewiseSplit(sqlFragment) {
+		if isBinder(fragment) {
+			output = append(output, bind.Get(fragment))
+		}
+	}
+
+	return output
 }
