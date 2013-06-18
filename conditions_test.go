@@ -73,13 +73,10 @@ func TestEqualCondition(t *testing.T) {
 		)
 
 		test.Section("Test Equal Condition Log")
-		test.F.AreEqual(
-			ec.String(),
-			"test_tbl.test_col = 1",
-			"String not correctly generate for EQUAL condition, expected %s, got %s",
-			"test_tbl.test_col = 1",
-			ec.String(),
-		)
+		test.AreEqual(ec.String(), "test_tbl.test_col = 1")
+
+		ec.val = "asdf"
+		test.AreEqual(ec.String(), "test_tbl.test_col = 'asdf'")
 	})
 }
 

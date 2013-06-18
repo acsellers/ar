@@ -224,7 +224,7 @@ func withVars(sqlFragment string, vals []interface{}) string {
 			if isArray(vals[i]) {
 				output = append(output, []byte(printArray(vals[i]))...)
 			} else {
-				output = append(output, []byte(fmt.Sprint(vals[i]))...)
+				output = append(output, []byte(printString(vals[i]))...)
 			}
 		}
 	}
@@ -251,12 +251,12 @@ func printArray(v interface{}) string {
 	if vType.Kind() == reflect.Slice || vType.Kind() == reflect.Array {
 		output := make([]string, vValue.Len())
 		for i := 0; i < vValue.Len(); i++ {
-			output[i] = fmt.Sprint(vValue.Index(i).Interface())
+			output[i] = printString(vValue.Index(i).Interface())
 		}
 		return strings.Join(output, ",")
 	}
 
-	return fmt.Sprint(v)
+	return printString(v)
 }
 
 func printString(v interface{}) string {
@@ -276,7 +276,7 @@ func bindedWith(sqlFragment string, bindVals interface{}) string {
 
 	for _, fragment := range piecewiseSplit(sqlFragment) {
 		if isBinder(fragment) {
-			output = append(output, fmt.Sprint(bind.Get(fragment)))
+			output = append(output, printString(bind.Get(fragment)))
 		} else {
 			output = append(output, fragment)
 		}
