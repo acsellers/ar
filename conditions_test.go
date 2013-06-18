@@ -182,3 +182,20 @@ func TestWhereConditionBinding(t *testing.T) {
 	})
 
 }
+
+func TestVaryCondition(t *testing.T) {
+	Within(t, func(test *Test) {
+		test.Section("Setup Vary Condition")
+		vc := &varyCondition{"test_tbl.test_col", EQUAL, 5}
+		test.AreEqual(vc.Values(), []interface{}{5})
+
+		test.Section("Test Vary SQL")
+		vc.val = nil
+		test.AreEqual(vc.Fragment(), "test_tbl.test_col IS NULL")
+
+		test.Section("Test Vary Log")
+		vc.val = "asdf"
+		vc.cond = NOT_EQUAL
+		test.AreEqual(vc.String(), "test_tbl.test_col <> 'asdf'")
+	})
+}

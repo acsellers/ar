@@ -165,20 +165,20 @@ func (vc *varyCondition) String() string {
 		if isNil(vc.val) {
 			return vc.column + " IS NULL"
 		}
-		return vc.column + " = " + fmt.Sprint(vc.val)
+		return vc.column + " = " + printString(vc.val)
 	case NOT_EQUAL:
 		if isNil(vc.val) {
 			return vc.column + " IS NOT NULL"
 		}
-		return vc.column + " <> " + fmt.Sprint(vc.val)
+		return vc.column + " <> " + printString(vc.val)
 	case LESS_THAN:
-		return vc.column + " < " + fmt.Sprint(vc.val)
+		return vc.column + " < " + printString(vc.val)
 	case LESS_OR_EQUAL:
-		return vc.column + " <= " + fmt.Sprint(vc.val)
+		return vc.column + " <= " + printString(vc.val)
 	case GREATER_THAN:
-		return vc.column + " > " + fmt.Sprint(vc.val)
+		return vc.column + " > " + printString(vc.val)
 	case GREATER_OR_EQUAL:
-		return vc.column + " >= " + fmt.Sprint(vc.val)
+		return vc.column + " >= " + printString(vc.val)
 	}
 
 	return ""
@@ -256,6 +256,13 @@ func printArray(v interface{}) string {
 		return strings.Join(output, ",")
 	}
 
+	return fmt.Sprint(v)
+}
+
+func printString(v interface{}) string {
+	if s, ok := v.(string); ok {
+		return "'" + s + "'"
+	}
 	return fmt.Sprint(v)
 }
 
