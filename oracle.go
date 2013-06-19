@@ -3,8 +3,8 @@ package ar
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
 	"strings"
-	"time"
 )
 
 type oracleDialect struct {
@@ -27,46 +27,39 @@ func (d oracleDialect) Quote(s string) string {
 	return strings.Join(a, sep)
 }
 
-func (d oracleDialect) SqlType(f interface{}, size int) string {
-	switch f.(type) {
-	case time.Time:
-		return "DATE"
-	/*
-		        case bool:
-				return "boolean"
-	*/
-	case int, int8, int16, int32, uint, uint8, uint16, uint32, int64, uint64:
+func (d oracleDialect) CompatibleSqlTypes(f reflect.Type) []string {
+	return []string{d.sqlType(f, 250)}
+}
+func (d oracleDialect) sqlType(f reflect.Type, size int) string {
+	switch f.Kind() {
+	case reflect.Struct:
+		if f.String() == "time.Time" {
+			return "DATE"
+		}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
 		if size > 0 {
 			return fmt.Sprintf("NUMBER(%d)", size)
 		}
 		return "NUMBER"
-	case float32, float64:
+	case reflect.Float32, reflect.Float64:
 		if size > 0 {
 			return fmt.Sprintf("NUMBER(%d,%d)", size/10, size%10)
 		}
 		return "NUMBER(16,2)"
-	case []byte, string:
+	case reflect.String:
 		if size > 0 && size < 4000 {
 			return fmt.Sprintf("VARCHAR2(%d)", size)
 		}
-		return "CLOB"
+
+	case reflect.Slice:
+		if f.String() == "[]uint8" { //[]byte
+			if size > 0 && size < 4000 {
+				return fmt.Sprintf("VARCHAR2(%d)", size)
+			}
+			return "CLOB"
+		}
 	}
 	panic("invalid sql type")
-}
-
-func (d oracleDialect) Insert(q *Qbs) (int64, error) {
-	sql, args := d.dialect.InsertSql(q.criteria)
-	row := q.QueryRow(sql, args...)
-	value := q.criteria.model.pk.value
-	var err error
-	var id int64
-	if _, ok := value.(int64); ok {
-		err = row.Scan(&id)
-	} else if _, ok := value.(string); ok {
-		var str string
-		err = row.Scan(&str)
-	}
-	return id, err
 }
 
 func (d oracleDialect) InsertSql(criteria *criteria) (string, []interface{}) {
@@ -75,18 +68,7 @@ func (d oracleDialect) InsertSql(criteria *criteria) (string, []interface{}) {
 	return sql, values
 }
 
-func (d oracleDialect) IndexExists(db *sql.DB, dbName, tableName, indexName string) bool {
-	var row *sql.Row
-	var name string
-	query := "SELECT INDEX_NAME FROM USER_INDEXES "
-	query += "WHERE TABLE_NAME = ? AND INDEX_NAME = ?"
-	query = d.SubstituteMarkers(query)
-	row = db.QueryRow(query, tableName, indexName)
-	row.Scan(&name)
-	return name != ""
-}
-
-func (d oracleDialect) SubstituteMarkers(query string) string {
+func (d oracleDialect) FormatQuery(query string) string {
 	position := 1
 	chunks := make([]string, 0, len(query)*2)
 	for _, v := range query {
@@ -100,11 +82,11 @@ func (d oracleDialect) SubstituteMarkers(query string) string {
 	return strings.Join(chunks, "")
 }
 
-func (d oracleDialect) ColumnsInTable(db *sql.DB, dbName string, table interface{}) map[string]bool {
+func (d oracleDialect) ColumnsInTable(db *sql.DB, dbName string, table interface{}) map[string]*columnInfo {
 	tn := tableName(table)
 	columns := make(map[string]bool)
 	query := "SELECT COLUMN_NAME FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ?"
-	query = d.SubstituteMarkers(query)
+	query = d.FormatQuery(query)
 	rows, err := db.Query(query, tn)
 	defer rows.Close()
 	if err != nil {
@@ -114,49 +96,8 @@ func (d oracleDialect) ColumnsInTable(db *sql.DB, dbName string, table interface
 		column := ""
 		err := rows.Scan(&column)
 		if err == nil {
-			columns[column] = true
+			columns[column] = new(columnInfo)
 		}
 	}
 	return columns
-}
-
-func (d oracleDialect) PrimaryKeySql(isString bool, size int) string {
-	if isString {
-		return fmt.Sprintf("VARCHAR2(%d) PRIMARY KEY NOT NULL", size)
-	}
-	if size == 0 {
-		size = 16
-	}
-	return fmt.Sprintf("NUMBER(%d) PRIMARY KEY NOT NULL", size)
-}
-
-func (d oracleDialect) CreateTableSql(model *model, ifNotExists bool) string {
-	baseSql := d.base.CreateTableSql(model, false)
-	if _, isString := model.pk.value.(string); isString {
-		return baseSql
-	}
-	table_pk := model.table + "_" + model.pk.name
-	sequence := " CREATE SEQUENCE " + table_pk + "_seq" +
-		" MINVALUE 1 NOMAXVALUE START WITH 1 INCREMENT BY 1 NOCACHE CYCLE"
-	trigger := " CREATE TRIGGER " + table_pk + "_triger BEFORE INSERT ON " + table_pk +
-		" FOR EACH ROW WHEN (new.id is null)" +
-		" begin" +
-		" select " + table_pk + "_seq.nextval into: new.id from dual " +
-		" end "
-	return baseSql + ";" + sequence + ";" + trigger
-}
-
-func (d oracleDialect) CatchMigrationError(err error) bool {
-	errString := err.Error()
-	return strings.Contains(errString, "ORA-00955") || strings.Contains(errString, "ORA-00942")
-}
-
-func (d oracleDialect) DropTableSql(table string) string {
-	a := []string{"DROP TABLE"}
-	a = append(a, d.dialect.Quote(table))
-	return strings.Join(a, " ")
-}
-
-func (oracleDialect) SqlName() string {
-	return "oracle"
 }

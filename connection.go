@@ -50,7 +50,7 @@ func NewConnection(dialectName, dbName, connector string) (*Connection, error) {
 		return nil, fmt.Errorf("Could not locate dialect '%s'", dialectName)
 	}
 
-	if db, err := sql.Open(conn.Dialect.SqlName(), connector); err == nil {
+	if db, err := sql.Open(dialectName, connector); err == nil {
 		db.SetMaxIdleConns(100)
 		conn.DB = db
 	} else {
@@ -61,10 +61,6 @@ func NewConnection(dialectName, dbName, connector string) (*Connection, error) {
 	conn.stmtMap = make(map[string]*sql.Stmt)
 
 	return conn, nil
-}
-
-func (c *Connection) IndexExists(table, index string) bool {
-	return c.Dialect.IndexExists(c.DB, dbName, table, index)
 }
 
 func (c *Connection) ColumnsForTable(table interface{}) []string {

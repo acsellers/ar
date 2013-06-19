@@ -14,9 +14,57 @@ const (
 type Queryable struct {
 	source     *source
 	order      []string
+	groupBy    string
 	offset     int
 	limit      int
+	selection  []selector
+	joins      []join
 	conditions []condition
+}
+
+func (q *Queryable) selectorSql() string {
+	if len(q.selection) == 0 {
+		return "*"
+	}
+	output := make([]string, len(q.selection))
+	for i, selection := range q.selection {
+		output[i] = selection.String()
+	}
+	return strings.Join(output, ", ")
+}
+
+func (q *Queryable) conditionSql() (string, []interface{}) {
+	ac := &andCondition{q.conditions}
+	return ac.Fragment(), ac.Values()
+}
+
+func (q *Queryable) joinSql() string {
+	if len(q.selection) == 0 {
+		return ""
+	}
+	output := make([]string, len(q.joins))
+	for i, join := range q.joins {
+		output[i] = join.String()
+	}
+	return strings.Join(output, " ")
+}
+
+func (q *Queryable) endingSql() string {
+	var output string
+	if queryable.groupBy != "" {
+		output += " GROUP BY " + queryable.groupBy
+	}
+	if len(queryable.order) > 0 {
+		output += strings.Join(queryable.order, ", ")
+	}
+	if queryable.limit != 0 {
+		output += " LIMIT " + fmt.Sprint(queryable.limit)
+	}
+	if queryable.offset != 0 {
+		output += " OFFSET " + fmt.Sprint(queryable.offset)
+	}
+
+	return output
 }
 
 // Identity is the way to clone a Queryable, it is used everywhere

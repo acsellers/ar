@@ -1,10 +1,7 @@
 package ar
 
 import (
-	"database/sql"
-	"fmt"
 	"reflect"
-	"time"
 )
 
 type mysqlDialect struct {
@@ -17,52 +14,26 @@ func newMysql() Dialect {
 	return d
 }
 
-func (mysqlDialect) ParseBool(value reflect.Value) bool {
-	return value.Int() != 0
-}
-
-func (d mysqlDialect) SqlType(f interface{}, size int) string {
-	switch f.(type) {
-	case time.Time:
-		return "timestamp"
-	case bool:
-		return "boolean"
-	case int, int8, int16, int32, uint, uint8, uint16, uint32:
-		return "int"
-	case int64, uint64:
-		return "bigint"
-	case float32, float64:
-		return "double"
-	case []byte:
-		if size > 0 && size < 65532 {
-			return fmt.Sprintf("varbinary(%d)", size)
+func (d mysqlDialect) CompatibleSqlTypes(f reflect.Type) []string {
+	switch f.Kind() {
+	case reflect.Struct:
+		if f.String() == "time.Time" {
+			return []string{"timestamp"}
 		}
-		return "longblob"
-	case string:
-		if size > 0 && size < 65532 {
-			return fmt.Sprintf("varchar(%d)", size)
+	case reflect.Bool:
+		return []string{"boolean"}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
+		return []string{"int"}
+	case reflect.Int64, reflect.Uint64:
+		return []string{"bigint"}
+	case reflect.Float32, reflect.Float64:
+		return []string{"double"}
+	case reflect.Slice:
+		if f.String() == "[]uint8" { //[]byte
+			return []string{"varbinary", "longblob"}
 		}
-		return "longtext"
+	case reflect.String:
+		return []string{"varchar", "longtext"}
 	}
 	panic("invalid sql type")
-}
-
-func (d mysqlDialect) IndexExists(db *sql.DB, dbName, tableName, indexName string) bool {
-	var row *sql.Row
-	var name string
-	row = db.QueryRow("SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS "+
-		"WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND INDEX_NAME = ?", dbName, tableName, indexName)
-	row.Scan(&name)
-	return name != ""
-}
-
-func (d mysqlDialect) PrimaryKeySql(isString bool, size int) string {
-	if isString {
-		return fmt.Sprintf("varchar(%d) PRIMARY KEY", size)
-	}
-	return "bigint PRIMARY KEY AUTO_INCREMENT"
-}
-
-func (mysqlDialect) SqlName() string {
-	return "mysql"
 }
