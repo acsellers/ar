@@ -1,14 +1,14 @@
 package ar
 
 type Mapper struct {
-	model *model
+	source *source
 }
 
 // Identity will create a queryable for a specific mapper,
 // in this way, the different Queryable methods are simply
 // implemented in the manner mapper.Identity().Method().
 func (m *Mapper) Identity() *Queryable {
-	return &Queryable{model: m.model}
+	return &Queryable{source: m.source}
 }
 
 func (m *Mapper) Where(fragment string, args ...interface{}) *Queryable {

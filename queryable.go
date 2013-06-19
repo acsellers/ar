@@ -12,7 +12,7 @@ const (
 )
 
 type Queryable struct {
-	model      *model
+	source     *source
 	order      []string
 	offset     int
 	limit      int
@@ -22,7 +22,7 @@ type Queryable struct {
 // Identity is the way to clone a Queryable, it is used everywhere
 func (q *Queryable) Identity() *Queryable {
 	return &Queryable{
-		model:      q.model,
+		source:     q.source,
 		order:      q.order,
 		offset:     q.offset,
 		limit:      q.limit,
@@ -95,6 +95,6 @@ func (q *Queryable) Reorder(ordering string) *Queryable {
 func (q *Queryable) Find(val interface{}) *Queryable {
 	nq := q.Identity()
 	nq.conditions = append(q.conditions,
-		&equalCondition{fmt.Sprint(q.model.pk), val})
+		&equalCondition{fmt.Sprint(q.source.ID.Column()), val})
 	return nq
 }

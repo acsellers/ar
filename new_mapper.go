@@ -5,14 +5,14 @@ import (
 	"strconv"
 )
 
-func (c *Connection) CreateMapper(mapee interface{}) (*Mapper, error) {
-	name, mapper := c.createMapperForPtr(mapee)
-	c.models[name] = mapper
+func (c *Connection) CreateMapper(name string, mapee interface{}, Options ...map[string]map[string]interface{}) (*Mapper, error) {
+	msource := c.newSource(name, mapee, Options)
+	c.sources[name] = msource
 
-	return mapper, nil
+	return &Mapper{msource}, nil
 }
 
-func (c *Connection) CreateMapperPlus(v interface{}) {
+func (c *Connection) CreateMapperPlus(name string, v interface{}, Options ...map[string]map[string]interface{}) {
 	rv := reflect.ValueOf(v).Elem()
 	fv := rv.Field(0)
 	mp := new(MapperPlus)

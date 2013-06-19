@@ -23,11 +23,11 @@ func TestMapperBasic(t *testing.T) {
 		c := &Connection{
 			Dialect: newMysql(),
 			dbName:  "testdb",
-			models:  make(map[string]*Mapper),
+			sources: make(map[string]*source),
 			Config:  testConfig,
 		}
 
-		userMapper, err := c.CreateMapper(&user{})
+		userMapper, err := c.CreateMapper("User", &user{})
 		test.IsNil(err)
 		test.IsNotNil(userMapper)
 

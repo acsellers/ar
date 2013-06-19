@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"reflect"
+	"strconv"
 	"sync"
 )
 
@@ -30,7 +32,7 @@ type Connection struct {
 	txCount, txMax int
 	txMutex        sync.Mutex
 	txWait         []chan int
-	models         map[string]*Mapper
+	sources        map[string]*source
 	Config         *Config
 }
 
@@ -172,4 +174,117 @@ func (c *Connection) SetTransactionLimit(max int, blocking bool) {
 
 	c.txMax = max
 	c.txCount = max - currentTx
+}
+
+func (c *Connection) newSource(name string, ptr interface{}, Options []map[string]map[string]interface{}) *source {
+	structType := c.getType(ptr)
+
+	s := new(source)
+	s.Name = name
+	s.config = c.Config
+	s.Fields = c.createMappingsFromType(structType)
+	c.propagateOptions(s, Options)
+	s.structName = structType.Name()
+
+	return s
+}
+
+func (c *Connection) getType(ptr interface{}) reflect.Type {
+	currentType := reflect.TypeOf(ptr)
+	for currentType.Kind() == reflect.Ptr {
+		currentType = currentType.Elem()
+	}
+
+	return currentType
+}
+
+func (c *Connection) createMappingsFromType(structType reflect.Type) []*sourceMapping {
+	output := make([]*sourceMapping, 0, structType.NumField())
+	for i := 0; i < structType.NumField(); i++ {
+		mapping := new(sourceMapping)
+		options := new(structOptions)
+		mapping.structOptions = options
+		field := structType.Field(i)
+
+		options.Name = field.Name
+		options.Index = i
+		options.Kind = field.Type.Kind()
+		options.ColumnHint = field.Tag.Get("colName")
+		options.Options = c.parseFieldOptions(field.Tag)
+
+	}
+
+	return output
+}
+
+func (c *Connection) propagateOptions(s *source, Options []map[string]map[string]interface{}) {
+	for _, optionSet := range Options {
+		if allOptions, ok := optionSet["all"]; ok {
+			for _, field := range s.Fields {
+				for key, value := range allOptions {
+					field.structOptions.Options[key] = value
+				}
+			}
+		}
+		for column, colOptions := range optionSet {
+			for _, field := range s.Fields {
+				if field.structOptions.Name == column {
+					for key, value := range colOptions {
+						field.structOptions.Options[key] = value
+					}
+				}
+			}
+		}
+	}
+}
+
+func (c *Connection) parseFieldOptions(tag reflect.StructTag) map[string]interface{} {
+	options := make(map[string]interface{})
+	optionString := string(tag)
+
+	for optionString != "" {
+		// following code is adapted from the golang reflect package
+		i := 0
+		for i < len(optionString) && optionString[i] == ' ' {
+			i++
+		}
+		optionString = optionString[i:]
+		if optionString == "" {
+			break
+		}
+
+		// scan to colon.
+		// a space or a quote is a syntax error
+		i = 0
+		for i < len(optionString) && optionString[i] != ' ' && optionString[i] != ':' && optionString[i] != '"' {
+			i++
+		}
+		if i+1 >= len(optionString) || optionString[i] != ':' || optionString[i+1] != '"' {
+			break
+		}
+		name := string(optionString[:i])
+		optionString = optionString[i+1:]
+
+		// scan quoted string to find value
+		i = 1
+		for i < len(optionString) && optionString[i] != '"' {
+			if optionString[i] == '\\' {
+				i++
+			}
+			i++
+		}
+		if i >= len(optionString) {
+			break
+		}
+		qvalue := string(optionString[:i+1])
+		optionString = optionString[i+1:]
+
+		if name[:2] == "ar" {
+			options[name[2:]], _ = strconv.Unquote(qvalue)
+		} else {
+			options[name[2:]], _ = strconv.Unquote(qvalue)
+		}
+	}
+
+	return options
 }
