@@ -1,6 +1,7 @@
 package ar
 
 import "fmt"
+import "strings"
 
 const (
 	EQUAL = iota
@@ -21,6 +22,8 @@ type Queryable struct {
 	joins      []join
 	conditions []condition
 }
+
+type Formula string
 
 func (q *Queryable) selectorSql() string {
 	if len(q.selection) == 0 {
@@ -49,7 +52,7 @@ func (q *Queryable) joinSql() string {
 	return strings.Join(output, " ")
 }
 
-func (q *Queryable) endingSql() string {
+func (queryable *Queryable) endingSql() string {
 	var output string
 	if queryable.groupBy != "" {
 		output += " GROUP BY " + queryable.groupBy

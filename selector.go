@@ -30,4 +30,6 @@ func (s *selector) String() string {
 	case ALIAS:
 		return printString(s.Value) + " AS " + s.Alias
 	}
+
+	return ""
 }

@@ -11,7 +11,6 @@ func init() {
 	registeredDialects = make(map[string]Dialect)
 
 	registeredDialects["mysql"] = newMysql()
-	registeredDialects["oracle"] = newOracle()
 }
 
 // If you have an external dialect, use this function to
@@ -27,12 +26,13 @@ type Dialect interface {
 	CompatibleSqlTypes(f reflect.Type) []string
 	FormatQuery(query string) string
 	Query(queryable *Queryable) (string, []interface{})
+	Update(queryable *Queryable, values map[string]interface{}) (string, []interface{})
 
 	// Quote will quote identifiers in a SQL statement.
 	Quote(s string) string
 
 	// Being Replaced
-	InsertSql(queryable *Queryable) (sql string, args []interface{})
-	UpdateSql(queryable *Queryable) (string, []interface{})
-	DeleteSql(queryable *Queryable) (string, []interface{})
+	//InsertSql(queryable *Queryable) (sql string, args []interface{})
+	//DeleteSql(queryable *Queryable) (string, []interface{})
+	//UpdateSql(queryable *Queryable) (string, []interface{})
 }

@@ -38,6 +38,23 @@ func (d base) Query(queryable *Queryable) (string, []interface{}) {
 	return output, values
 }
 
+func (d base) Update(queryable *Queryable, values map[string]interface{}) (string, []interface{}) {
+	output := "UPDATE " + queryable.source.tableName + " SET ("
+	columns := make([]string, 0, len(values))
+	args := make([]string, 0, len(values))
+	for c, v := range values {
+		columns = append(columns, c)
+		args = append(args, d.printArg(v))
+	}
+	output += strings.Join(columns, ", ") + ") = (" + strings.Join(args, ", ") + ")"
+	conditions, sqlArgs := queryable.conditionSql()
+	output += " WHERE " + conditions
+
+	return output, sqlArgs
+}
+
+/*
+
 func (d base) InsertSql(queryable *Queryable) (string, []interface{}) {
 	columns, values := criteria.model.columnsAndValues(false)
 	quotedColumns := make([]string, 0, len(columns))
@@ -55,6 +72,7 @@ func (d base) InsertSql(queryable *Queryable) (string, []interface{}) {
 	return sql, values
 }
 
+
 func (d base) UpdateSql(queryable *Queryable) (string, []interface{}) {
 	columns, values := criteria.model.columnsAndValues(true)
 	pairs := make([]string, 0, len(columns))
@@ -71,13 +89,12 @@ func (d base) UpdateSql(queryable *Queryable) (string, []interface{}) {
 	values = append(values, args...)
 	return sql, values
 }
-
 func (d base) DeleteSql(queryable *Queryable) (string, []interface{}) {
 	conditionSql, args := queryable.conditionSql()
 	sql := "DELETE FROM " + d.dialect.Quote(criteria.model.table) + " WHERE " + conditionSql
 	return sql, args
 }
-
+*/
 func (d base) ColumnsInTable(db *sql.DB, dbName string, table interface{}) map[string]*columnInfo {
 	tn := tableName(table)
 	columns := make(map[string]*columnInfo)
@@ -96,4 +113,15 @@ func (d base) ColumnsInTable(db *sql.DB, dbName string, table interface{}) map[s
 		}
 	}
 	return columns
+}
+
+func (d base) printArg(v interface{}) string {
+	switch t := v.(type) {
+	case Formula:
+		return string(t)
+	case string:
+		return "'" + t + "'"
+	default:
+		return fmt.Sprint(v)
+	}
 }

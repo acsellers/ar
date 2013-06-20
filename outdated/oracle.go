@@ -62,12 +62,13 @@ func (d oracleDialect) sqlType(f reflect.Type, size int) string {
 	panic("invalid sql type")
 }
 
+/*
 func (d oracleDialect) InsertSql(criteria *criteria) (string, []interface{}) {
 	sql, values := d.base.InsertSql(criteria)
 	sql += " RETURNING " + d.dialect.Quote(criteria.model.pk.name)
 	return sql, values
 }
-
+*/
 func (d oracleDialect) FormatQuery(query string) string {
 	position := 1
 	chunks := make([]string, 0, len(query)*2)
@@ -84,7 +85,7 @@ func (d oracleDialect) FormatQuery(query string) string {
 
 func (d oracleDialect) ColumnsInTable(db *sql.DB, dbName string, table interface{}) map[string]*columnInfo {
 	tn := tableName(table)
-	columns := make(map[string]bool)
+	columns := make(map[string]*columnInfo)
 	query := "SELECT COLUMN_NAME FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ?"
 	query = d.FormatQuery(query)
 	rows, err := db.Query(query, tn)

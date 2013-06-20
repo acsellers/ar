@@ -47,8 +47,6 @@ func (test *FTest) logDetails() {
 		test.T.Logf("Error in File %s on Line %v", fn, l)
 	}
 }
-func (test *Test) logCaller() {
-}
 
 // Nil tests
 func (test *Test) IsNil(v interface{}, msgs ...interface{}) {

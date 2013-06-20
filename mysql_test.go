@@ -1,23 +1,67 @@
 package ar
 
 import (
+	"reflect"
 	"testing"
 	"time"
 )
 
-func TestMysqlSqlType(t *testing.T) {
+func TestMysqlCompatibleSqlTypes(t *testing.T) {
 	Within(t, func(test *Test) {
 		d := newMysql()
-		test.AreEqual("boolean", d.SqlType(true, 0))
-		var indirect interface{} = true
-		test.AreEqual("boolean", d.SqlType(indirect, 0))
-		test.AreEqual("int", d.SqlType(uint32(2), 0))
-		test.AreEqual("bigint", d.SqlType(int64(1), 0))
-		test.AreEqual("double", d.SqlType(1.8, 0))
-		test.AreEqual("longblob", d.SqlType([]byte("asdf"), 0))
-		test.AreEqual("longtext", d.SqlType("astring", 0))
-		test.AreEqual("longtext", d.SqlType("a", 65536))
-		test.AreEqual("varchar(128)", d.SqlType("b", 128))
-		test.AreEqual("timestamp", d.SqlType(time.Now(), 0))
+		test.IsTrue(
+			stringMatch(
+				d.CompatibleSqlTypes(reflect.TypeOf(true)),
+				"boolean",
+			),
+		)
+		test.IsTrue(
+			stringMatch(
+				d.CompatibleSqlTypes(reflect.TypeOf(uint32(2))),
+				"int",
+			),
+		)
+		test.IsTrue(
+			stringMatch(
+				d.CompatibleSqlTypes(reflect.TypeOf(int64(1))),
+				"bigint",
+			),
+		)
+		test.IsTrue(
+			stringMatch(
+				d.CompatibleSqlTypes(reflect.TypeOf(1.8)),
+				"double",
+			),
+		)
+		test.IsTrue(
+			stringMatch(
+				d.CompatibleSqlTypes(reflect.TypeOf([]byte("asdf"))),
+				"longblob",
+			),
+		)
+		test.IsTrue(
+			stringMatch(
+				d.CompatibleSqlTypes(reflect.TypeOf("astring")),
+				"longtext",
+			),
+		)
+		test.IsTrue(
+			stringMatch(
+				d.CompatibleSqlTypes(reflect.TypeOf("a")),
+				"text",
+			),
+		)
+		test.IsTrue(
+			stringMatch(
+				d.CompatibleSqlTypes(reflect.TypeOf("b")),
+				"varchar",
+			),
+		)
+		test.IsTrue(
+			stringMatch(
+				d.CompatibleSqlTypes(reflect.TypeOf(time.Now())),
+				"timestamp",
+			),
+		)
 	})
 }

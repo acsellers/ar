@@ -22,18 +22,24 @@ func (d mysqlDialect) CompatibleSqlTypes(f reflect.Type) []string {
 		}
 	case reflect.Bool:
 		return []string{"boolean"}
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32:
-		return []string{"int"}
+	case reflect.Int, reflect.Int32, reflect.Uint, reflect.Uint32:
+		return []string{"int", "integer", "bigint"}
 	case reflect.Int64, reflect.Uint64:
 		return []string{"bigint"}
-	case reflect.Float32, reflect.Float64:
+	case reflect.Int8, reflect.Uint8:
+		return []string{"tinyint", "smallint", "mediumint", "int", "integer", "bigint"}
+	case reflect.Int16, reflect.Uint16:
+		return []string{"mediumint", "int", "integer", "bigint"}
+	case reflect.Float32:
+		return []string{"double", "float"}
+	case reflect.Float64:
 		return []string{"double"}
 	case reflect.Slice:
 		if f.String() == "[]uint8" { //[]byte
 			return []string{"varbinary", "longblob"}
 		}
 	case reflect.String:
-		return []string{"varchar", "longtext"}
+		return []string{"varchar", "text", "longtext"}
 	}
 	panic("invalid sql type")
 }
