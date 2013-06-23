@@ -5,10 +5,11 @@ import (
 )
 
 type source struct {
-	ID     *sourceMapping
-	Name   string
-	config *Config
-	Fields []*sourceMapping
+	ID      *sourceMapping
+	Name    string
+	SqlName string
+	config  *Config
+	Fields  []*sourceMapping
 
 	structName, tableName string
 }
@@ -34,10 +35,7 @@ type columnInfo struct {
 	Name      string
 	SqlTable  string
 	SqlColumn string
-	SqlType   int
+	SqlType   string
 	Length    int
 	Nullable  bool
-	Key       int
-	Default   interface{}
-	Extra     map[string]interface{}
 }

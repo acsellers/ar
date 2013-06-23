@@ -95,7 +95,7 @@ func (d base) DeleteSql(queryable *Queryable) (string, []interface{}) {
 	return sql, args
 }
 */
-func (d base) ColumnsInTable(db *sql.DB, dbName string, table interface{}) map[string]*columnInfo {
+func (d base) ColumnsInTable(db *sql.DB, dbName string, table string) map[string]*columnInfo {
 	tn := tableName(table)
 	columns := make(map[string]*columnInfo)
 	query := "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"

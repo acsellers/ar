@@ -63,18 +63,6 @@ func NewConnection(dialectName, dbName, connector string) (*Connection, error) {
 	return conn, nil
 }
 
-func (c *Connection) ColumnsForTable(table interface{}) []string {
-	columnMap := c.Dialect.ColumnsInTable(c.DB, c.dbName, table)
-	columns := make([]string, len(columnMap))
-	i := 0
-	for k, _ := range columnMap {
-		columns[i] = k
-		i++
-	}
-
-	return columns
-}
-
 func (c *Connection) StartTransaction() (*Tx, error) {
 	c.txCount++
 	if c.txMax > 0 {
@@ -177,8 +165,10 @@ func (c *Connection) newSource(name string, ptr interface{}, Options []map[strin
 
 	s := new(source)
 	s.Name = name
+	s.SqlName = c.Config.StructToTable(name)
 	s.config = c.Config
 	s.Fields = c.createMappingsFromType(structType)
+	c.createSqlMappings(s)
 	c.propagateOptions(s, Options)
 	s.structName = structType.Name()
 
@@ -208,6 +198,7 @@ func (c *Connection) createMappingsFromType(structType reflect.Type) []*sourceMa
 		options.ColumnHint = field.Tag.Get("colName")
 		options.Options = c.parseFieldOptions(field.Tag)
 
+		output = append(output, mapping)
 	}
 
 	return output
@@ -283,4 +274,15 @@ func (c *Connection) parseFieldOptions(tag reflect.StructTag) map[string]interfa
 	}
 
 	return options
+}
+
+func (c *Connection) createSqlMappings(s *source) {
+	for _, column := range c.Dialect.ColumnsInTable(c, c.dbName, s.SqlName) {
+		for _, field := range s.Fields {
+			if c.Config.FieldToColumn(field.structOptions.Name) == column.Name {
+				field.columnInfo = column
+				break
+			}
+		}
+	}
 }

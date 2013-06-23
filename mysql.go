@@ -2,7 +2,11 @@ package ar
 
 import (
 	"reflect"
+	"regexp"
+	"strconv"
 )
+
+var typeRegex = regexp.MustCompile("^([a-zA-Z0-9]+)(\\([0-9]+\\))?(.*)")
 
 type mysqlDialect struct {
 	base
@@ -42,4 +46,61 @@ func (d mysqlDialect) CompatibleSqlTypes(f reflect.Type) []string {
 		return []string{"varchar", "text", "longtext"}
 	}
 	panic("invalid sql type")
+}
+
+func (d mysqlDialect) ColumnsInTable(conn *Connection, dbName string, table string) map[string]*columnInfo {
+	query := "SHOW COLUMNS FROM " + table
+	if dbName != "" {
+		query = "SHOW COLUMNS FROM " + table + " IN " + dbName
+	}
+
+	output := make(map[string]*columnInfo)
+	rows, err := conn.DB.Query(query)
+	if err != nil {
+		defer rows.Close()
+		panic(err)
+		return nil
+	}
+
+	var name, sqlType, key, extra string
+	var def string
+	var nullable bool
+	for rows.Next() {
+		ci := new(columnInfo)
+
+		rows.Scan(&name, &sqlType, &nullable, &key, &def, &extra)
+		ci.Name = name
+		ci.SqlTable = table
+		ci.SqlColumn = name
+		ci.Nullable = nullable
+		ci.SqlType = d.sqlTypeFrom(sqlType)
+		ci.Length = d.sqlLengthFrom(sqlType)
+		output[name] = ci
+	}
+
+	return output
+}
+
+func (d mysqlDialect) sqlTypeFrom(st string) string {
+	if typeRegex.MatchString(st) {
+		return typeRegex.FindStringSubmatch(st)[1]
+	}
+	return st
+}
+
+func (d mysqlDialect) sqlLengthFrom(st string) int {
+	if typeRegex.MatchString(st) {
+		matches := typeRegex.FindStringSubmatch(st)
+		if len(matches) > 3 && len(matches[2]) > 0 {
+			strLength := len(matches[2])
+			lenStr := matches[2][1 : strLength-1]
+			i, err := strconv.ParseInt(lenStr, 10, 32)
+			if err != nil {
+				return -1
+			}
+			return int(i)
+		}
+	}
+
+	return 0
 }

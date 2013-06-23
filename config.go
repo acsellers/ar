@@ -6,4 +6,6 @@ type Config struct {
 	FieldToColumn func(string) string
 	ColumnToField func(string) string
 	IdName        string
+	CreatedColumn string
+	UpdatedColumn string
 }

@@ -1,7 +1,6 @@
 package ar
 
 import (
-	"database/sql"
 	"reflect"
 )
 
@@ -22,7 +21,7 @@ func RegisterDialect(name string, dialect Dialect) {
 }
 
 type Dialect interface {
-	ColumnsInTable(db *sql.DB, dbName string, tableName interface{}) map[string]*columnInfo
+	ColumnsInTable(conn *Connection, dbName string, tableName string) map[string]*columnInfo
 	CompatibleSqlTypes(f reflect.Type) []string
 	FormatQuery(query string) string
 	Query(queryable *Queryable) (string, []interface{})
