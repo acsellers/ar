@@ -99,6 +99,7 @@ func verifyUserTable(test *Test, cols map[string]*columnInfo) {
 func verifyMapper(test *Test, mapper *Mapper) {
 	test.AreEqual(mapper.source.Name, "User")
 	test.AreEqual(len(mapper.source.Fields), 5)
+	test.AreEqual(mapper.source.ColNum, 6)
 	columnMappings := map[string][]string{
 		"ID":       []string{"id", "int"},
 		"Name":     []string{"name", "varchar"},

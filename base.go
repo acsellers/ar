@@ -29,10 +29,12 @@ func (d base) Quote(s string) string {
 }
 
 func (d base) Query(queryable *Queryable) (string, []interface{}) {
-	output := "SELECT " + queryable.selectorSql() + " FROM " + queryable.source.tableName
+	output := "SELECT " + queryable.selectorSql() + " FROM " + queryable.source.SqlName
 	output += queryable.joinSql()
 	conditions, values := queryable.conditionSql()
-	output += " WHERE " + conditions
+	if conditions != "" {
+		output += " WHERE " + conditions
+	}
 	output += queryable.endingSql()
 
 	return output, values

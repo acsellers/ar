@@ -1,6 +1,7 @@
 package ar
 
 import "fmt"
+import "reflect"
 import "strings"
 
 const (
@@ -37,8 +38,11 @@ func (q *Queryable) selectorSql() string {
 }
 
 func (q *Queryable) conditionSql() (string, []interface{}) {
-	ac := &andCondition{q.conditions}
-	return ac.Fragment(), ac.Values()
+	if len(q.conditions) > 0 {
+		ac := &andCondition{q.conditions}
+		return ac.Fragment(), ac.Values()
+	}
+	return "", []interface{}{}
 }
 
 func (q *Queryable) joinSql() string {
@@ -155,5 +159,30 @@ func (q *Queryable) Retrieve(val interface{}) error {
 }
 
 func (q *Queryable) RetrieveAll(val interface{}) error {
+	query, values := q.source.conn.Dialect.Query(q)
+	rows, err := q.source.runQuery(query, values)
+	if err != nil {
+		return err
+	}
+	if reflect.TypeOf(val).Kind() != reflect.Ptr {
+		return nil // TODO: create an error for this
+	}
+	valv := reflect.ValueOf(val)
+	vals := valv.Elem()
+	valn := vals
+	vet := vals.Type().Elem()
+	vn := reflect.New(vet)
+	rfltr := reflector{vn}
+	plan := q.source.mapPlan(rfltr)
+	for rows.Next() {
+		err = rows.Scan(plan.Items()...)
+		if err != nil {
+			return err
+		}
+		valn = reflect.Append(valn, vn.Elem())
+		rfltr.item = reflect.New(vet)
+	}
+	vals.Set(valn)
+
 	return nil
 }

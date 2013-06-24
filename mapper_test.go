@@ -10,5 +10,10 @@ func TestPostMapper(t *testing.T) {
 		Posts := conn.M("Post")
 		test.IsNotNil(Posts)
 		test.AreEqual(5, len(Posts.source.Fields))
+		var posts []post
+		err := Posts.RetrieveAll(&posts)
+		test.IsNil(err)
+		test.AreEqual(len(posts), 1)
+		test.AreEqual(posts[0].Title, "First Post")
 	})
 }

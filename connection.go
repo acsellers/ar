@@ -164,6 +164,7 @@ func (c *Connection) newSource(name string, ptr interface{}, Options []map[strin
 	structType := c.getType(ptr)
 
 	s := new(source)
+	s.conn = c
 	s.Name = name
 	s.SqlName = c.Config.StructToTable(name)
 	s.config = c.Config
@@ -278,6 +279,10 @@ func (c *Connection) parseFieldOptions(tag reflect.StructTag) map[string]interfa
 
 func (c *Connection) createSqlMappings(s *source) {
 	for _, column := range c.Dialect.ColumnsInTable(c, c.dbName, s.SqlName) {
+		if column.Number+1 > s.ColNum {
+			s.ColNum = column.Number + 1
+		}
+
 		for _, field := range s.Fields {
 			if c.Config.FieldToColumn(field.structOptions.Name) == column.Name {
 				field.columnInfo = column

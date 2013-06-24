@@ -52,7 +52,12 @@ func (test *FTest) logDetails() {
 func (test *Test) IsNil(v interface{}, msgs ...interface{}) {
 	if !testIsNil(v) {
 		test.logDetails()
-		test.T.Error(msgs...)
+		test.T.Log("Nil check failed")
+		if len(msgs) > 0 {
+			test.T.Error(msgs...)
+		} else {
+			test.T.Error(v, "is not nil")
+		}
 	}
 }
 func (test *Test) IsNotNil(v interface{}, msgs ...interface{}) {
