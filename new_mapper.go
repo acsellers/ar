@@ -12,11 +12,17 @@ func (c *Connection) CreateMapper(name string, mapee interface{}, Options ...map
 	return &Mapper{msource}, nil
 }
 
+func (c *Connection) M(name string) *Mapper {
+	if s, ok := c.sources[name]; ok {
+		return &Mapper{s}
+	}
+	return nil
+}
+
 func (c *Connection) CreateMapperPlus(name string, v interface{}, Options ...map[string]map[string]interface{}) {
 	rv := reflect.ValueOf(v).Elem()
 	fv := rv.Field(0)
 	mp := new(MapperPlus)
-	//mp.model = createModelFor(v)
 	vmp := reflect.ValueOf(mp)
 	if fv.Type().Kind() == reflect.Ptr {
 		fv.Set(vmp)
@@ -25,17 +31,6 @@ func (c *Connection) CreateMapperPlus(name string, v interface{}, Options ...map
 
 func (c *Connection) createMapperForPtr(ptr interface{}) (string, *Mapper) {
 	return "model", new(Mapper)
-}
-
-func (c *Connection) createModelFor(ptr interface{}) *model {
-	newModel := &model{
-		pk:      nil,
-		table:   c.tableNameFor(ptr),
-		Fields:  c.fieldsFor(ptr),
-		indexes: Indexes{},
-	}
-
-	return newModel
 }
 
 func (c *Connection) tableNameFor(ptr interface{}) string {

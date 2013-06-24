@@ -38,4 +38,5 @@ type columnInfo struct {
 	SqlType   string
 	Length    int
 	Nullable  bool
+	Number    int
 }

@@ -65,6 +65,7 @@ func (d mysqlDialect) ColumnsInTable(conn *Connection, dbName string, table stri
 	var name, sqlType, key, extra string
 	var def string
 	var nullable bool
+	var number int
 	for rows.Next() {
 		ci := new(columnInfo)
 
@@ -75,7 +76,9 @@ func (d mysqlDialect) ColumnsInTable(conn *Connection, dbName string, table stri
 		ci.Nullable = nullable
 		ci.SqlType = d.sqlTypeFrom(sqlType)
 		ci.Length = d.sqlLengthFrom(sqlType)
+		ci.Number = number
 		output[name] = ci
+		number++
 	}
 
 	return output

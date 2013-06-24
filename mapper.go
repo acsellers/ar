@@ -51,3 +51,7 @@ func (m *Mapper) Reorder(ordering string) *Queryable {
 func (m *Mapper) Find(val interface{}) *Queryable {
 	return m.Identity().Find(val)
 }
+
+func (m *Mapper) RetrieveAll(val interface{}) error {
+	return m.Identity().RetrieveAll(val)
+}

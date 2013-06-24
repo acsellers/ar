@@ -272,25 +272,6 @@ func structPtrToModel(f interface{}, root bool, omitFields []string) *model {
 	return model
 }
 
-func tableName(talbe interface{}) string {
-	if t, ok := talbe.(string); ok {
-		return t
-	}
-	t := reflect.TypeOf(talbe).Elem()
-	for {
-		c := false
-		switch t.Kind() {
-		case reflect.Array, reflect.Chan, reflect.Map, reflect.Ptr, reflect.Slice:
-			t = t.Elem()
-			c = true
-		}
-		if !c {
-			break
-		}
-	}
-	return StructNameToTableName(t.Name())
-}
-
 func parseTags(s string) map[string]string {
 	if s == "" {
 		return nil

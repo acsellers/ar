@@ -1,0 +1,43 @@
+package main
+
+import (
+  "fmt"
+  "reflect"
+)
+
+type User struct {
+  ID   int
+  Name string
+}
+
+type Mapper struct {
+  Results []string
+}
+
+func (m *Mapper) RetrieveAll(v interface{}) {
+  vt := reflect.TypeOf(v)
+  vv := reflect.ValueOf(v)
+  if vt.Kind() == reflect.Ptr {
+    vs := vv.Elem()
+    vn := vs
+    vet := vs.Type().Elem()
+    for i, result := range m.Results {
+      vetv := reflect.New(vet)
+      vetv.Elem().Field(1).SetString(result)
+      vetv.Elem().Field(0).SetInt(int64(i+1))
+      vn = reflect.Append(vn, vetv.Elem())
+    }
+
+    vs.Set(vn)
+  } else {
+    fmt.Println(reflect.TypeOf(v))
+  }
+}
+
+func main() {
+  m := &Mapper{Results: []string{"Frist", "Second", "Last"}}
+  users := make([]User, 0)
+  m.RetrieveAll(&users)
+  fmt.Println(users)
+}
+

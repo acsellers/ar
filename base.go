@@ -96,11 +96,10 @@ func (d base) DeleteSql(queryable *Queryable) (string, []interface{}) {
 }
 */
 func (d base) ColumnsInTable(db *sql.DB, dbName string, table string) map[string]*columnInfo {
-	tn := tableName(table)
 	columns := make(map[string]*columnInfo)
 	query := "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
 	query = d.FormatQuery(query)
-	rows, err := db.Query(query, dbName, tn)
+	rows, err := db.Query(query, dbName, table)
 	defer rows.Close()
 	if err != nil {
 		panic(err)

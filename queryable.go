@@ -149,3 +149,11 @@ func (q *Queryable) Find(val interface{}) *Queryable {
 		&equalCondition{fmt.Sprint(q.source.ID.Column()), val})
 	return nq
 }
+
+func (q *Queryable) Retrieve(val interface{}) error {
+	return nil
+}
+
+func (q *Queryable) RetrieveAll(val interface{}) error {
+	return nil
+}

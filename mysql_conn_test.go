@@ -74,6 +74,7 @@ func verifyUserTable(test *Test, cols map[string]*columnInfo) {
 		test.AreEqual(id.SqlColumn, "id")
 		test.AreEqual(id.SqlType, "int")
 		test.AreEqual(id.Length, 255)
+		test.AreEqual(id.Number, 0)
 	} else {
 		test.T.Error("id column doesn't exist")
 	}
@@ -82,12 +83,14 @@ func verifyUserTable(test *Test, cols map[string]*columnInfo) {
 		test.AreEqual(name.SqlTable, "user")
 		test.AreEqual(name.SqlType, "varchar")
 		test.AreEqual(name.Length, 255)
+		test.AreEqual(name.Number, 1)
 	} else {
 		test.T.Error("name column doesn't exist")
 	}
 	if story, ok := cols["story"]; ok {
 		test.AreEqual(story.SqlType, "text")
 		test.AreEqual(story.Length, 0)
+		test.AreEqual(story.Number, 4)
 	} else {
 		test.T.Error("story column doesn't exist")
 	}

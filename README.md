@@ -32,13 +32,24 @@ The reason why it is faster than `Db.Query` is because all prepared Statements a
 ##Install
 
 Don't install yet for production, as I'm making breaking changes, but it 
-will likely support only go1.1.
+will be tested on Go 1.1.
 
 ## API Documentation
 
 Will be on godoc when I've gotten some work into it.
 
 ##History
+So I had wanted to write an ORM that let me do the useful bits from Rails's
+ActiveRecord for a while, but I couldn't figure out enough of the whole 
+picture to see a finish line. I just tried to add part of a feature until I
+got tired of working on it and then moved on. After qbs hit 0.2, I though I
+would tweak and add on to it to make nice library, maybe get it merged in at
+some point. It was really just supposed to be replacing the defaults to work
+better with ActiveRecord databases.
+
+As I wanted to change things, I started and changed a bit, then changed a bit 
+more. Eventually, I owned up and just started rewriting the whole library. 
+There isn't really any signifiant used code remaining from qbs. 
 AR is a fork of qbs by [Ewan Chou](https://github.com/coocood)
 
 ##Contributors on qbs
