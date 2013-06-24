@@ -13,7 +13,9 @@ func TestPostMapper(t *testing.T) {
 		var posts []post
 		err := Posts.RetrieveAll(&posts)
 		test.IsNil(err)
-		test.AreEqual(len(posts), 1)
+		test.AreEqual(len(posts), 2)
 		test.AreEqual(posts[0].Title, "First Post")
+		test.AreEqual(posts[0].Views, 1)
+		test.AreEqual(posts[1].Title, "Second Post")
 	})
 }
