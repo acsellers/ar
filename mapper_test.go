@@ -22,8 +22,12 @@ func TestPostMapper(t *testing.T) {
 		test.AreEqual(posts[1].Title, "Second Post")
 
 		test.Section("Finding First Post")
-		var firstPost post
-		test.IsNil(Posts.Find(1).Retrieve(&firstPost))
-		test.AreEqual(firstPost.Title, "First Post")
+		var singlePost post
+		test.IsNil(Posts.Find(1).Retrieve(&singlePost))
+		test.AreEqual(singlePost.Title, "First Post")
+
+		test.IsNil(Posts.Find(2).Retrieve(&singlePost))
+		test.AreEqual(singlePost.Title, "Second Post")
+
 	})
 }
