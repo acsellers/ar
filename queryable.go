@@ -203,3 +203,15 @@ func (q *Queryable) RetrieveAll(dest interface{}) error {
 
 	return nil
 }
+
+func (q *Queryable) UpdateAttribute(column string, val interface{}) error {
+	query, vals := q.source.conn.Dialect.Update(q, map[string]interface{}{column: val})
+	_, err := q.source.runExec(query, vals)
+
+	return err
+}
+func (q *Queryable) UpdateAttributes(values map[string]interface{}) error {
+	query, vals := q.source.conn.Dialect.Update(q, values)
+	_, err := q.source.runExec(query, vals)
+	return err
+}

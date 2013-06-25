@@ -41,18 +41,18 @@ func (d base) Query(queryable *Queryable) (string, []interface{}) {
 }
 
 func (d base) Update(queryable *Queryable, values map[string]interface{}) (string, []interface{}) {
-	output := "UPDATE " + queryable.source.tableName + " SET ("
+	output := "UPDATE " + queryable.source.SqlName + " SET "
 	columns := make([]string, 0, len(values))
-	args := make([]string, 0, len(values))
+	args := make([]interface{}, 0, len(values))
 	for c, v := range values {
 		columns = append(columns, c)
-		args = append(args, d.printArg(v))
+		args = append(args, v)
 	}
-	output += strings.Join(columns, ", ") + ") = (" + strings.Join(args, ", ") + ")"
+	output += strings.Join(columns, "= ?, ") + " = ?"
 	conditions, sqlArgs := queryable.conditionSql()
 	output += " WHERE " + conditions
 
-	return output, sqlArgs
+	return output, append(args, sqlArgs...)
 }
 
 /*
