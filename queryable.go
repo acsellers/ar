@@ -1,5 +1,6 @@
 package ar
 
+import "errors"
 import "fmt"
 import "reflect"
 import "strings"
@@ -155,23 +156,39 @@ func (q *Queryable) Find(val interface{}) *Queryable {
 }
 
 func (q *Queryable) Retrieve(val interface{}) error {
-	return nil
-}
-
-func (q *Queryable) RetrieveAll(val interface{}) error {
 	query, values := q.source.conn.Dialect.Query(q)
 	rows, err := q.source.runQuery(query, values)
+	defer rows.Close()
 	if err != nil {
 		return err
 	}
+
 	if reflect.TypeOf(val).Kind() != reflect.Ptr {
-		return nil // TODO: create an error for this
+		return errors.New("Must Supply Ptr to Destination")
 	}
-	valv := reflect.ValueOf(val)
-	vals := valv.Elem()
-	valn := vals
-	vet := vals.Type().Elem()
-	vn := reflect.New(vet)
+	value := reflect.ValueOf(val)
+	rfltr := reflector{value}
+	plan := q.source.mapPlan(rfltr)
+
+	rows.Next()
+	return rows.Scan(plan.Items()...)
+}
+
+func (q *Queryable) RetrieveAll(dest interface{}) error {
+	query, values := q.source.conn.Dialect.Query(q)
+	rows, err := q.source.runQuery(query, values)
+	defer rows.Close()
+	if err != nil {
+		return err
+	}
+	if reflect.TypeOf(dest).Kind() != reflect.Ptr {
+		return errors.New("Must Supply Ptr to Destination")
+	}
+	destVal := reflect.ValueOf(dest)
+	destSliceVal := destVal.Elem()
+	tempSliceVal := destSliceVal
+	element := destSliceVal.Type().Elem()
+	vn := reflect.New(element)
 	rfltr := reflector{vn}
 	plan := q.source.mapPlan(rfltr)
 	for rows.Next() {
@@ -179,10 +196,10 @@ func (q *Queryable) RetrieveAll(val interface{}) error {
 		if err != nil {
 			return err
 		}
-		valn = reflect.Append(valn, vn.Elem())
-		rfltr.item = reflect.New(vet)
+		tempSliceVal = reflect.Append(tempSliceVal, vn.Elem())
+		rfltr.item = reflect.New(element)
 	}
-	vals.Set(valn)
+	destSliceVal.Set(tempSliceVal)
 
 	return nil
 }

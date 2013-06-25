@@ -169,6 +169,11 @@ func (c *Connection) newSource(name string, ptr interface{}, Options []map[strin
 	s.SqlName = c.Config.StructToTable(name)
 	s.config = c.Config
 	s.Fields = c.createMappingsFromType(structType)
+	for _, field := range s.Fields {
+		if field.structOptions.Name == c.Config.IdName {
+			s.ID = field
+		}
+	}
 	c.createSqlMappings(s)
 	c.propagateOptions(s, Options)
 	s.structName = structType.Name()
