@@ -25,6 +25,7 @@ type Dialect interface {
 	CompatibleSqlTypes(f reflect.Type) []string
 	FormatQuery(query string) string
 	Query(queryable *Queryable) (string, []interface{})
+	Create(mapper *Mapper, values map[string]interface{}) (string, []interface{})
 	Update(queryable *Queryable, values map[string]interface{}) (string, []interface{})
 
 	// Quote will quote identifiers in a SQL statement.

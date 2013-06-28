@@ -40,6 +40,19 @@ func (d base) Query(queryable *Queryable) (string, []interface{}) {
 	return output, values
 }
 
+func (d base) Create(mapper *Mapper, values map[string]interface{}) (string, []interface{}) {
+	output := "INSERT INTO " + mapper.source.SqlName + " SET "
+	sqlVals := make([]interface{}, len(values))
+	current := 0
+	for col, val := range values {
+		sqlVals[current] = val
+		current++
+		output += col + " = ? "
+	}
+
+	return output, sqlVals
+}
+
 func (d base) Update(queryable *Queryable, values map[string]interface{}) (string, []interface{}) {
 	output := "UPDATE " + queryable.source.SqlName + " SET "
 	columns := make([]string, 0, len(values))
