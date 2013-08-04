@@ -1,4 +1,4 @@
-package ar
+package db
 
 import (
 	"database/sql"

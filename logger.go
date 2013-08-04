@@ -1,4 +1,4 @@
-package ar
+package db
 
 type Logger interface {
 	Println(v ...interface{})

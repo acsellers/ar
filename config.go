@@ -1,4 +1,4 @@
-package ar
+package db
 
 type Config struct {
 	StructToTable func(string) string

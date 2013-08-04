@@ -1,4 +1,4 @@
-package ar
+package db
 
 type MapperPlus struct {
 	source *source

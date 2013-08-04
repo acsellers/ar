@@ -1,4 +1,4 @@
-package ar
+package db
 
 const (
 	WHOLE_TABLE = iota
