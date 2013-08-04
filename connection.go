@@ -59,6 +59,7 @@ func NewConnection(dialectName, dbName, connector string) (*Connection, error) {
 
 	conn.dbName = dbName
 	conn.stmtMap = make(map[string]*sql.Stmt)
+	conn.sources = make(map[string]*source)
 
 	return conn, nil
 }
