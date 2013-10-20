@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"reflect"
 )
 
@@ -31,15 +32,31 @@ type planner struct {
 }
 
 func (s *source) mapPlan(v reflector) *planner {
-	p := &planner{make([]interfaceable, s.ColNum)}
-	for i, _ := range p.scanners {
-		p.scanners[i] = new(nullScanner)
-	}
+	p := &planner{[]interfaceable{}}
+
 	for _, col := range s.Fields {
-		p.scanners[col.columnInfo.Number] = &reflectScanner{parent: v, index: col.columnInfo.Number}
+		if col.columnInfo != nil && col.structOptions != nil {
+			p.scanners = append(
+				p.scanners,
+				&reflectScanner{parent: v, index: col.columnInfo.Number},
+			)
+		}
 	}
 
 	return p
+}
+
+func (s *source) selectColumns() []string {
+	output := []string{}
+	for _, col := range s.Fields {
+		if col.columnInfo != nil && col.structOptions != nil {
+			output = append(
+				output,
+				fmt.Sprintf("%s.%s", s.SqlName, col.columnInfo.SqlColumn),
+			)
+		}
+	}
+	return output
 }
 
 func (p *planner) Items() []interface{} {

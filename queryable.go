@@ -29,7 +29,7 @@ type Formula string
 
 func (q *Queryable) selectorSql() string {
 	if len(q.selection) == 0 {
-		return "*"
+		return strings.Join(q.source.selectColumns(), ", ")
 	}
 	output := make([]string, len(q.selection))
 	for i, selection := range q.selection {
