@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	. "github.com/acsellers/assert"
 	_ "github.com/go-sql-driver/mysql"
 	"testing"
 )

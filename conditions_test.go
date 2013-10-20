@@ -1,6 +1,7 @@
 package db
 
 import (
+	. "github.com/acsellers/assert"
 	"testing"
 )
 
