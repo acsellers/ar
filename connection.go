@@ -113,7 +113,7 @@ func (tx *Tx) Rollback() error {
 	return err
 }
 
-// ar will set the pool size for a connection to 100, if you need
+// db will set the pool size for a connection to 100, if you need
 // a different pool size, you can do it with this function
 func (c *Connection) ChangePoolSize(size int) {
 	c.DB.SetMaxIdleConns(size)

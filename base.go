@@ -28,20 +28,20 @@ func (d base) Quote(s string) string {
 	return buf.String()
 }
 
-func (d base) Query(queryable *Queryable) (string, []interface{}) {
-	output := "SELECT " + queryable.selectorSql() + " FROM " + queryable.source.SqlName
-	output += queryable.joinSql()
-	conditions, values := queryable.conditionSql()
+func (d base) Query(scope Scope) (string, []interface{}) {
+	output := "SELECT " + scope.SelectorSql() + " FROM " + scope.TableName()
+	output += scope.JoinSql()
+	conditions, values := scope.ConditionSql()
 	if conditions != "" {
 		output += " WHERE " + conditions
 	}
-	output += queryable.endingSql()
+	output += scope.EndingSql()
 
 	return output, values
 }
 
-func (d base) Create(mapper *Mapper, values map[string]interface{}) (string, []interface{}) {
-	output := "INSERT INTO " + mapper.source.SqlName + " SET "
+func (d base) Create(mapper Mapper, values map[string]interface{}) (string, []interface{}) {
+	output := "INSERT INTO " + mapper.TableName() + " SET "
 	sqlVals := make([]interface{}, len(values))
 	current := 0
 	for col, val := range values {
@@ -53,8 +53,8 @@ func (d base) Create(mapper *Mapper, values map[string]interface{}) (string, []i
 	return output, sqlVals
 }
 
-func (d base) Update(queryable *Queryable, values map[string]interface{}) (string, []interface{}) {
-	output := "UPDATE " + queryable.source.SqlName + " SET "
+func (d base) Update(scope Scope, values map[string]interface{}) (string, []interface{}) {
+	output := "UPDATE " + scope.TableName() + " SET "
 	columns := make([]string, 0, len(values))
 	args := make([]interface{}, 0, len(values))
 	for c, v := range values {
@@ -62,10 +62,18 @@ func (d base) Update(queryable *Queryable, values map[string]interface{}) (strin
 		args = append(args, v)
 	}
 	output += strings.Join(columns, "= ?, ") + " = ?"
-	conditions, sqlArgs := queryable.conditionSql()
+	conditions, sqlArgs := scope.ConditionSql()
 	output += " WHERE " + conditions
 
 	return output, append(args, sqlArgs...)
+}
+
+func (d base) Delete(scope Scope) (string, []interface{}) {
+	output := "DELETE FROM " + scope.TableName() + " SET "
+	conditions, sqlArgs := scope.ConditionSql()
+	output += " WHERE " + conditions
+
+	return output, sqlArgs
 }
 
 /*

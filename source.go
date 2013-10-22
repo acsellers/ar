@@ -85,17 +85,6 @@ func (rf *reflectScanner) iface() interface{} {
 	return rf.parent.item.Elem().Field(rf.index).Addr().Interface()
 }
 
-type nullScanner struct {
-}
-
-func (n *nullScanner) iface() interface{} {
-	return interface{}(n)
-}
-
-func (*nullScanner) Scan(v interface{}) error {
-	return nil
-}
-
 type structOptions struct {
 	Name       string
 	Index      int

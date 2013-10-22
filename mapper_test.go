@@ -9,9 +9,9 @@ func TestPostMapper(t *testing.T) {
 	Within(t, func(test *Test) {
 		test.Section("Setup")
 		conn := setupDefaultConn()
-		Posts := conn.M("Post")
+		Posts := conn.m("Post")
 		test.IsNotNil(Posts)
-		test.AreEqual(5, len(Posts.source.Fields))
+		test.AreEqual(5, len(Posts.(*source).Fields))
 
 		test.Section("Finding All Posts")
 		var posts []post
@@ -24,24 +24,24 @@ func TestPostMapper(t *testing.T) {
 
 		test.Section("Finding First Post")
 		var singlePost post
-		test.NoError(Posts.Find(1).Retrieve(&singlePost))
+		test.NoError(Posts.Find(1, &singlePost))
 		test.AreEqual(singlePost.Title, "First Post")
 
-		test.NoError(Posts.Find(2).Retrieve(&singlePost))
+		test.NoError(Posts.Find(2, &singlePost))
 		test.AreEqual(singlePost.Title, "Second Post")
 		test.AreEqual(singlePost.Views, 1)
 
-		Posts.Find(2).UpdateAttribute("views", 2)
-		test.NoError(Posts.Find(2).Retrieve(&singlePost))
+		Posts.EqualTo("id", 2).UpdateAttribute("views", 2)
+		test.NoError(Posts.Find(2, &singlePost))
 		test.AreEqual(singlePost.Views, 2)
-		Posts.Find(2).UpdateAttributes(map[string]interface{}{
+		Posts.EqualTo("id", 2).UpdateAttributes(map[string]interface{}{
 			"views":     1,
 			"permalink": "invalid",
 		})
 
-		test.NoError(Posts.Find(2).Retrieve(&singlePost))
+		test.NoError(Posts.Find(2, &singlePost))
 		test.AreEqual(singlePost.Views, 1)
 		test.AreEqual(singlePost.Permalink, "invalid")
-		Posts.Find(2).UpdateAttribute("permalink", "second_post")
+		Posts.EqualTo("id", 2).UpdateAttribute("permalink", "second_post")
 	})
 }

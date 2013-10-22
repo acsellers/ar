@@ -5,63 +5,64 @@ import (
 	"reflect"
 )
 
-type Mapper struct {
-	source *source
+func (s *source) Identity() Scope {
+	return &queryable{source: s}
 }
 
-// Identity will create a queryable for a specific mapper,
-// in this way, the different Queryable methods are simply
-// implemented in the manner mapper.Identity().Method().
-func (m *Mapper) Identity() *Queryable {
-	return &Queryable{source: m.source}
+func (s *source) Where(fragment string, args ...interface{}) Scope {
+	return s.Identity().Where(fragment, args...)
 }
 
-func (m *Mapper) Where(fragment string, args ...interface{}) *Queryable {
-	return m.Identity().Where(fragment, args...)
+func (s *source) Cond(column string, condition int, val ...interface{}) Scope {
+	return s.Identity().Cond(column, condition, val...)
 }
 
-func (m *Mapper) EqualTo(column string, val interface{}) *Queryable {
+func (m *source) EqualTo(column string, val interface{}) Scope {
 	return m.Identity().EqualTo(column, val)
 }
 
-func (m *Mapper) Between(column string, lower, upper interface{}) *Queryable {
+func (m *source) Between(column string, lower, upper interface{}) Scope {
 	return m.Identity().Between(column, lower, upper)
 }
 
-func (m *Mapper) In(column string, vals []interface{}) *Queryable {
+func (m *source) In(column string, vals []interface{}) Scope {
 	return m.Identity().In(column, vals)
 }
 
-func (m *Mapper) Limit(limit int) *Queryable {
+func (m *source) Limit(limit int) Scope {
 	return m.Identity().Limit(limit)
 }
 
-func (m *Mapper) Offset(offset int) *Queryable {
+func (m *source) Offset(offset int) Scope {
 	return m.Identity().Offset(offset)
 }
 
-func (m *Mapper) OrderBy(column, direction string) *Queryable {
+func (m *source) OrderBy(column, direction string) Scope {
 	return m.Identity().OrderBy(column, direction)
 }
 
-func (m *Mapper) Order(ordering string) *Queryable {
+func (m *source) Order(ordering string) Scope {
 	return m.Identity().Order(ordering)
 }
 
-func (m *Mapper) Reorder(ordering string) *Queryable {
+func (m *source) Reorder(ordering string) Scope {
 	return m.Identity().Reorder(ordering)
 }
 
 // Find looks for the record with primary key equal to val
-func (m *Mapper) Find(val interface{}) *Queryable {
-	return m.Identity().Find(val)
+func (m *source) Find(id interface{}, val interface{}) error {
+	return m.Identity().Find(id, val)
 }
 
-func (m *Mapper) RetrieveAll(val interface{}) error {
+func (m *source) Retrieve(val interface{}) error {
+	return m.Identity().Retrieve(val)
+}
+
+func (m *source) RetrieveAll(val interface{}) error {
 	return m.Identity().RetrieveAll(val)
 }
 
-func (m *Mapper) Save(val interface{}) error {
+func (m *source) SaveAll(val interface{}) error {
 	vv := reflect.ValueOf(val)
 	if reflect.TypeOf(val).Kind() == reflect.Ptr {
 		vv = vv.Elem()
@@ -77,7 +78,7 @@ func (m *Mapper) Save(val interface{}) error {
 	}
 }
 
-func (m *Mapper) saveSlice(v reflect.Value) error {
+func (m *source) saveSlice(v reflect.Value) error {
 	for i := 0; i < v.Len(); i++ {
 		vi := v.Index(i)
 		if vi.Type().Kind() == reflect.Ptr {
@@ -92,19 +93,19 @@ func (m *Mapper) saveSlice(v reflect.Value) error {
 	return nil
 }
 
-func (m *Mapper) saveItem(v reflect.Value) error {
+func (m *source) saveItem(v reflect.Value) error {
 	ident := m.extractID(v)
 	if ident == 0 {
 		return m.createItem(v)
 	}
 	values := m.extractColumnValues(v)
-	return m.Find(ident).UpdateAttributes(values)
+	return m.EqualTo(m.ID.SqlColumn, ident).UpdateAttributes(values)
 }
 
-func (m *Mapper) createItem(v reflect.Value) error {
+func (m *source) createItem(v reflect.Value) error {
 	values := m.extractColumnValues(v)
-	query, vals := m.source.conn.Dialect.Create(m, values)
-	result, err := m.source.runExec(query, vals)
+	query, vals := m.conn.Dialect.Create(m, values)
+	result, err := m.runExec(query, vals)
 	if err != nil {
 		return err
 	}
@@ -117,23 +118,27 @@ func (m *Mapper) createItem(v reflect.Value) error {
 	return nil
 }
 
-func (m *Mapper) extractID(v reflect.Value) int64 {
-	fieldIndex := m.source.ID.Index
+func (m *source) extractID(v reflect.Value) int64 {
+	fieldIndex := m.ID.Index
 	return v.Field(fieldIndex).Int()
 }
 
-func (m *Mapper) setID(v reflect.Value, id int64) {
-	fieldIndex := m.source.ID.Index
+func (m *source) setID(v reflect.Value, id int64) {
+	fieldIndex := m.ID.Index
 	v.Field(fieldIndex).SetInt(id)
 }
 
-func (m *Mapper) extractColumnValues(v reflect.Value) map[string]interface{} {
+func (m *source) extractColumnValues(v reflect.Value) map[string]interface{} {
 	output := make(map[string]interface{})
-	for _, field := range m.source.Fields {
+	for _, field := range m.Fields {
 		if field.columnInfo != nil && field.structOptions != nil {
 			value := v.Field(field.structOptions.Index)
 			output[field.columnInfo.Name] = value.Interface()
 		}
 	}
 	return output
+}
+
+func (s *source) TableName() string {
+	return s.SqlName
 }

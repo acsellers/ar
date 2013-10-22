@@ -5,16 +5,16 @@ import (
 	"strconv"
 )
 
-func (c *Connection) CreateMapper(name string, mapee interface{}, Options ...map[string]map[string]interface{}) (*Mapper, error) {
+func (c *Connection) CreateMapper(name string, mapee interface{}, Options ...map[string]map[string]interface{}) (Mapper, error) {
 	msource := c.newSource(name, mapee, Options)
 	c.sources[name] = msource
 
-	return &Mapper{msource}, nil
+	return msource, nil
 }
 
-func (c *Connection) M(name string) *Mapper {
+func (c *Connection) m(name string) Mapper {
 	if s, ok := c.sources[name]; ok {
-		return &Mapper{s}
+		return s
 	}
 	return nil
 }

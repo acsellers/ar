@@ -14,8 +14,8 @@ const (
 	GREATER_OR_EQUAL
 )
 
-type Queryable struct {
-	source     *source
+type queryable struct {
+	*source
 	order      []string
 	groupBy    string
 	offset     int
@@ -27,7 +27,7 @@ type Queryable struct {
 
 type Formula string
 
-func (q *Queryable) selectorSql() string {
+func (q *queryable) SelectorSql() string {
 	if len(q.selection) == 0 {
 		return strings.Join(q.source.selectColumns(), ", ")
 	}
@@ -38,7 +38,7 @@ func (q *Queryable) selectorSql() string {
 	return strings.Join(output, ", ")
 }
 
-func (q *Queryable) conditionSql() (string, []interface{}) {
+func (q *queryable) ConditionSql() (string, []interface{}) {
 	if len(q.conditions) > 0 {
 		ac := &andCondition{q.conditions}
 		return ac.Fragment(), ac.Values()
@@ -46,7 +46,7 @@ func (q *Queryable) conditionSql() (string, []interface{}) {
 	return "", []interface{}{}
 }
 
-func (q *Queryable) joinSql() string {
+func (q *queryable) JoinSql() string {
 	if len(q.selection) == 0 {
 		return ""
 	}
@@ -57,7 +57,7 @@ func (q *Queryable) joinSql() string {
 	return strings.Join(output, " ")
 }
 
-func (queryable *Queryable) endingSql() string {
+func (queryable *queryable) EndingSql() string {
 	var output string
 	if queryable.groupBy != "" {
 		output += " GROUP BY " + queryable.groupBy
@@ -75,9 +75,9 @@ func (queryable *Queryable) endingSql() string {
 	return output
 }
 
-// Identity is the way to clone a Queryable, it is used everywhere
-func (q *Queryable) Identity() *Queryable {
-	return &Queryable{
+// Identity is the way to clone a queryable, it is used everywhere
+func (q *queryable) Identity() Scope {
+	return &queryable{
 		source:     q.source,
 		order:      q.order,
 		offset:     q.offset,
@@ -86,82 +86,83 @@ func (q *Queryable) Identity() *Queryable {
 	}
 }
 
-func (q *Queryable) Where(fragment string, args ...interface{}) *Queryable {
-	nq := q.Identity()
+func (q *queryable) Where(fragment string, args ...interface{}) Scope {
+	nq := q.Identity().(*queryable)
 	nq.conditions = append(nq.conditions, &whereCondition{fragment, args})
 	return nq
 }
 
-func (q *Queryable) EqualTo(column string, val interface{}) *Queryable {
-	nq := q.Identity()
+func (q *queryable) EqualTo(column string, val interface{}) Scope {
+	nq := q.Identity().(*queryable)
 	nq.conditions = append(nq.conditions, &equalCondition{column, val})
 	return nq
 }
 
-func (q *Queryable) Between(column string, lower, upper interface{}) *Queryable {
-	nq := q.Identity()
+func (q *queryable) Between(column string, lower, upper interface{}) Scope {
+	nq := q.Identity().(*queryable)
 	nq.conditions = append(nq.conditions, &betweenCondition{column, lower, upper})
 	return nq
 }
 
-func (q *Queryable) In(column string, vals []interface{}) *Queryable {
-	nq := q.Identity()
+func (q *queryable) In(column string, vals []interface{}) Scope {
+	nq := q.Identity().(*queryable)
 	nq.conditions = append(nq.conditions, &inCondition{column, vals})
 	return nq
 }
 
-func (q *Queryable) Cond(column string, condition int, val ...interface{}) *Queryable {
-	nq := q.Identity()
+func (q *queryable) Cond(column string, condition int, val ...interface{}) Scope {
+	nq := q.Identity().(*queryable)
 	nq.conditions = append(nq.conditions, &varyCondition{column, condition, val})
 
 	return nq
 }
 
-func (q *Queryable) Limit(limit int) *Queryable {
-	nq := q.Identity()
+func (q *queryable) Limit(limit int) Scope {
+	nq := q.Identity().(*queryable)
 	nq.limit = limit
 	return nq
 }
 
-func (q *Queryable) Offset(offset int) *Queryable {
-	nq := q.Identity()
+func (q *queryable) Offset(offset int) Scope {
+	nq := q.Identity().(*queryable)
 	nq.offset = offset
 	return nq
 }
 
-func (q *Queryable) OrderBy(column, direction string) *Queryable {
-	nq := q.Identity()
+func (q *queryable) OrderBy(column, direction string) Scope {
+	nq := q.Identity().(*queryable)
 	nq.order = append(nq.order, column+" "+direction)
 	return nq
 }
 
-func (q *Queryable) Order(ordering string) *Queryable {
-	nq := q.Identity()
+func (q *queryable) Order(ordering string) Scope {
+	nq := q.Identity().(*queryable)
 	nq.order = append(nq.order, ordering)
 	return nq
 }
 
-func (q *Queryable) Reorder(ordering string) *Queryable {
-	nq := q.Identity()
+func (q *queryable) Reorder(ordering string) Scope {
+	nq := q.Identity().(*queryable)
 	nq.order = []string{ordering}
 	return nq
 }
 
 // Find looks for the record with primary key equal to val
-func (q *Queryable) Find(val interface{}) *Queryable {
-	nq := q.Identity()
-	nq.conditions = append(q.conditions,
-		&equalCondition{fmt.Sprint(q.source.ID.Column()), val})
-	return nq
+func (q *queryable) Find(id interface{}, val interface{}) error {
+	return q.EqualTo(q.source.ID.Column(), id).Retrieve(val)
+	//	nq := q.Identity().(*queryable)
+	//	nq.conditions = append(q.conditions,
+	//		&equalCondition{fmt.Sprint(q.source.ID.Column()), val})
+	//	return nq.Retrieve(val)
 }
 
-func (q *Queryable) Retrieve(val interface{}) error {
+func (q *queryable) Retrieve(val interface{}) error {
 	query, values := q.source.conn.Dialect.Query(q)
 	rows, err := q.source.runQuery(query, values)
-	defer rows.Close()
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 
 	if reflect.TypeOf(val).Kind() != reflect.Ptr {
 		return errors.New("Must Supply Ptr to Destination")
@@ -174,7 +175,7 @@ func (q *Queryable) Retrieve(val interface{}) error {
 	return rows.Scan(plan.Items()...)
 }
 
-func (q *Queryable) RetrieveAll(dest interface{}) error {
+func (q *queryable) RetrieveAll(dest interface{}) error {
 	query, values := q.source.conn.Dialect.Query(q)
 	rows, err := q.source.runQuery(query, values)
 	defer rows.Close()
@@ -204,14 +205,22 @@ func (q *Queryable) RetrieveAll(dest interface{}) error {
 	return nil
 }
 
-func (q *Queryable) UpdateAttribute(column string, val interface{}) error {
+func (q *queryable) UpdateAttribute(column string, val interface{}) error {
 	query, vals := q.source.conn.Dialect.Update(q, map[string]interface{}{column: val})
 	_, err := q.source.runExec(query, vals)
 
 	return err
 }
-func (q *Queryable) UpdateAttributes(values map[string]interface{}) error {
+func (q *queryable) UpdateAttributes(values map[string]interface{}) error {
 	query, vals := q.source.conn.Dialect.Update(q, values)
+	_, err := q.source.runExec(query, vals)
+	return err
+}
+func (q *queryable) UpdateSql(sql string, vals ...interface{}) error {
+	panic("UNIMPLEMENTED")
+}
+func (q *queryable) Delete() error {
+	query, vals := q.source.conn.Dialect.Delete(q)
 	_, err := q.source.runExec(query, vals)
 	return err
 }

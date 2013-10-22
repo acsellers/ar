@@ -6,7 +6,7 @@ Scheduling
   better define some interactions chan
 Versions
   0.1 (Cheap Hotel)
-    - ar
+    - db
       - Mapping struct to tables
       - Parameterized and bind variables
       - Scopable queries
@@ -20,7 +20,7 @@ Versions
         - Comments
 
   0.2 (The Sprawl)
-    - ar
+    - db
       - nested mappable structs
       - Mapping arbitrary sql
       - Validators
@@ -29,13 +29,13 @@ Versions
       - default scopes
       - local connections
     - tools
-      - arm Migrator
-      - art Translator
+      - dbm Migrator
+      - dbt Translator
     - docs
       - Calendar (02)
       - SSO (03)
   0.3 (Istanbul)
-    - ar
+    - db
       - scopable cache
       - output cache
       - performance improvements
@@ -44,29 +44,29 @@ Versions
       - Store Reporting (04)
       - School Gradebook (05)
   0.4 (Zion)
-    - ar
+    - db
       - Missing features
       - Simple Breaking API changes
     - tools
-      - arb Backup & Restore
+      - dbb Backup & Restore
     - docs
       - To be determined (06)
       - To be determined (07)
 
   0.5 (Marcus Garvey)
-    - ar
+    - db
       - Major breaking api changes
       - Auto sharding (if possible)
     - tools
-      - ars Shard Migrator (if possible)
-      - arf ar fix & ar vet
+      - dbs Shard Migrator (if possible)
+      - dbf db fix & db vet
     - docs
       - Best Practices
       - Performance Tuning
       - To Be Determined (08)
 
   0.6 (Freeside)
-    - ar
+    - db
       - Stabilize 0.5 breaking changes
       - Refactor code as necessary
       - Performance Improvements

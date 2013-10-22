@@ -24,9 +24,10 @@ type Dialect interface {
 	ColumnsInTable(conn *Connection, dbName string, tableName string) map[string]*columnInfo
 	CompatibleSqlTypes(f reflect.Type) []string
 	FormatQuery(query string) string
-	Query(queryable *Queryable) (string, []interface{})
-	Create(mapper *Mapper, values map[string]interface{}) (string, []interface{})
-	Update(queryable *Queryable, values map[string]interface{}) (string, []interface{})
+	Query(scope Scope) (string, []interface{})
+	Create(mapper Mapper, values map[string]interface{}) (string, []interface{})
+	Update(scope Scope, values map[string]interface{}) (string, []interface{})
+	Delete(scope Scope) (string, []interface{})
 
 	// Quote will quote identifiers in a SQL statement.
 	Quote(s string) string
