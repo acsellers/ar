@@ -5,6 +5,7 @@ import "fmt"
 import "reflect"
 import "strings"
 
+// Conditions for Cond calls
 const (
 	EQUAL = iota
 	NOT_EQUAL
@@ -12,6 +13,16 @@ const (
 	LESS_OR_EQUAL
 	GREATER_THAN
 	GREATER_OR_EQUAL
+)
+
+// Shorthand conditions for Cond calls
+const (
+	EQ = iota
+	NE
+	LT
+	LTE
+	GT
+	GTE
 )
 
 type queryable struct {
@@ -137,14 +148,17 @@ func (q *queryable) OrderBy(column, direction string) Scope {
 
 func (q *queryable) Order(ordering string) Scope {
 	nq := q.Identity().(*queryable)
+	if !(strings.HasSuffix(ordering, "DESC") || strings.HasSuffix("ASC")) {
+		ordering = ordering + " ASC"
+	}
 	nq.order = append(nq.order, ordering)
 	return nq
 }
 
 func (q *queryable) Reorder(ordering string) Scope {
 	nq := q.Identity().(*queryable)
-	nq.order = []string{ordering}
-	return nq
+	nq.order = []string{}
+	return nq.Order(ordering)
 }
 
 // Find looks for the record with primary key equal to val

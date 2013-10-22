@@ -22,11 +22,19 @@ func (c *Connection) m(name string) Mapper {
 func (c *Connection) CreateMapperPlus(name string, v interface{}, Options ...map[string]map[string]interface{}) {
 	rv := reflect.ValueOf(v).Elem()
 	fv := rv.Field(0)
-	mp := new(MapperPlus)
+	mp := new(mapperPlus)
 	vmp := reflect.ValueOf(mp)
 	if fv.Type().Kind() == reflect.Ptr {
 		fv.Set(vmp)
 	}
+}
+
+func (c *Connection) MustCreateMapper(name string, v interface{}) Mapper {
+	m, e := c.CreateMapper(name, v)
+	if e != nil {
+		panic(e)
+	}
+	return m
 }
 
 func (c *Connection) createMapperForPtr(ptr interface{}) (string, *Mapper) {
