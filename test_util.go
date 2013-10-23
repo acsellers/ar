@@ -17,7 +17,7 @@ func stringMatch(items []string, wanted string) bool {
 }
 func connectionString() string {
 	if os.Getenv("CI") == "yes" {
-		return "travis:@db_test?charset=utf8"
+		return "travis:@/db_test?charset=utf8"
 	} else {
 		return "root:toor@/db_test?charset=utf8"
 	}
