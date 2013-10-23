@@ -2,5 +2,5 @@ language: go
 go:
   - 1.1
 before_script:
-  - mysql -e 'create_database db_test;'
+  - mysql -e 'create database db_test;'
 env: CI=yes
