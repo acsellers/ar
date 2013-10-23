@@ -3,4 +3,7 @@ go:
   - 1.1
 before_script:
   - mysql -e 'create database db_test;'
+  - go get github.com/acsellers/assert
+  - go get github.com/acsellers/inflections
+  - go get github.com/go-sql-driver/mysql
 env: CI=yes
