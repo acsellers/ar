@@ -139,8 +139,6 @@ func (d base) ColumnsInTable(db *sql.DB, dbName string, table string) map[string
 
 func (d base) printArg(v interface{}) string {
 	switch t := v.(type) {
-	case Formula:
-		return string(t)
 	case string:
 		return "'" + t + "'"
 	default:

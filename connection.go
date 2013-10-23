@@ -36,12 +36,6 @@ type Connection struct {
 	Config         *Config
 }
 
-type Tx struct {
-	Tx        *sql.Tx
-	Conn      *Connection
-	txStmtMap map[string]*sql.Stmt
-}
-
 func NewConnection(dialectName, dbName, connector string) (*Connection, error) {
 	conn := new(Connection)
 	if dialect, found := registeredDialects[dialectName]; found {
@@ -62,55 +56,6 @@ func NewConnection(dialectName, dbName, connector string) (*Connection, error) {
 	conn.sources = make(map[string]*source)
 
 	return conn, nil
-}
-
-func (c *Connection) StartTransaction() (*Tx, error) {
-	c.txCount++
-	if c.txMax > 0 {
-		c.txMutex.Lock()
-		if c.txCount >= c.txMax {
-			if c.txBlock {
-				waiter := make(chan int)
-				c.txWait = append(c.txWait, waiter)
-				c.txMutex.Unlock()
-				<-waiter
-			} else {
-				c.txMutex.Unlock()
-				c.txCount--
-				return nil, TransactionLimitError
-			}
-		}
-	}
-	sqlTx, err := c.DB.Begin()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Tx{Tx: sqlTx, Conn: c, txStmtMap: make(map[string]*sql.Stmt)}, nil
-}
-
-func (tx *Tx) Commit() error {
-	err := tx.Tx.Commit()
-	tx.release()
-	return err
-}
-
-func (tx *Tx) release() {
-	tx.Conn.txCount--
-	if tx.Conn.txMax > 0 {
-		tx.Conn.txMutex.Lock()
-		if len(tx.Conn.txWait) > 0 {
-			tx.Conn.txWait[0] <- 1
-			tx.Conn.txWait = tx.Conn.txWait[1:]
-		}
-		tx.Conn.txMutex.Unlock()
-	}
-}
-
-func (tx *Tx) Rollback() error {
-	err := tx.Tx.Rollback()
-	tx.release()
-	return err
 }
 
 // db will set the pool size for a connection to 100, if you need

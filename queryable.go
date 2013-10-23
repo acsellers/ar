@@ -36,8 +36,6 @@ type queryable struct {
 	conditions []condition
 }
 
-type Formula string
-
 func (q *queryable) SelectorSql() string {
 	if len(q.selection) == 0 {
 		return strings.Join(q.source.selectColumns(), ", ")
@@ -148,7 +146,7 @@ func (q *queryable) OrderBy(column, direction string) Scope {
 
 func (q *queryable) Order(ordering string) Scope {
 	nq := q.Identity().(*queryable)
-	if !(strings.HasSuffix(ordering, "DESC") || strings.HasSuffix("ASC")) {
+	if !(strings.HasSuffix(ordering, "DESC") || strings.HasSuffix(ordering, "ASC")) {
 		ordering = ordering + " ASC"
 	}
 	nq.order = append(nq.order, ordering)

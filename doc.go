@@ -78,10 +78,25 @@ structs into the database and create scopes of the struct.
   var myRecentPosts []Post
   Posts.EqualTo("author_id", Current.User.Id).Order("hits_counter").RetrieveAll(&myRecentPosts)
 
-Mapper+
+Mappers can also save structs to the database using the SaveAll function. You
+can pass either a single instance or multiple instances to it, and it will use
+the primary key value of the passed instance(s) to determine whether it needs
+to update existing records or create new records.
+
+  expiration := time.Now().Add(time.Duration(7*24*time.Hour))
+  for _, post := range newPosts {
+    if post.AboveAverage(newPosts) {
+      post.FeaturedUntil = expiration
+    }
+  }
+
+  Posts.SaveAll(newPosts)
+
+
+MapperPlus
 
 Mapper+'s are like mappers, but they are designed to be part of a user defined
-struct, that the user then defines their own Scopes, which would be composed
+struct, that the user then defines their own Scopes on, where each custom scope would be composed
 of 1 or more regular scopes. The main difference between a Mapper and a Mapper+
 is that Mappers return a Scope when you call a Queryable method on it, while
 Mapper+ will return a new Mapper+ for the first scope, and then all further
@@ -107,6 +122,23 @@ add to the current Scope.
   moreGoodUsers := goodUsers.Activated()
   // at this moment the results of moreGoodUsers == goodUsers
   // but they are different instances
+
+When you need to duplicate a Mapper+ scope, you could use Identity, but that
+will return you a Scope, not a MapperPlus. To assist in this situation, the
+MapperPlus interface has a Dupe method that will return a MapperPlus for you
+to use for this situation.
+
+  type UserMapper struct {
+    db.MapperPlus
+  }
+  var Users *UserMapper
+  db.CreateMapperPlus("User", &Users)
+
+  // will error out
+  &UserMapper{Users.Where(...).Identity()}
+
+  // will compile correctly
+  &UserMapper{Users.Where(...).Dupe()}
 
 Scopes
 
@@ -208,5 +240,100 @@ any previous orders and replace them with the passed ordering.
 
   // order only by beginning time
   Appointments.Reorder("begin_time")
+
+Database Mapping
+
+There are multiple ways to retrieve data and map the data into struct instancess.
+
+The Find function takes two parameters, the primary key of the record you want and
+a pointer to the struct instance you want to map to. The Find function may start from
+Mappers, Scopes and Mapper+'s. Note that the Find will still respect any conditions on
+the Scope or Mapper+ if you are calling it from one of them.
+
+  // find user by id
+  var CurrentUser User
+  err := Users.Find(session["user_id"].Int(), &User)
+
+  // find user if the user is an admin
+  var AdminUser User
+  err := Users.Admins().Find(session["user_id"].Int(), &AdminUser)
+
+The Retrieve function takes 1 parameter, the struct instance to map the first records
+data into. If there are more than 1 records that would be returned from the current
+Scope, Mapper, or Mapper+, then the first record will be the mapped record.
+
+  // retrieve head writer for section
+  var SectionHead User
+  Users.Joins(SectionAssignments).EqualTo("section_assignments.section_id", section.Id).Retrieve(&SectionHead)
+
+  // retrieve first created user
+  var FirstUser User
+  Users.OrderBy("created_at", "ASC").Retrieve(&User)
+
+The RetrieveAll function takes 1 parameter, which is a pointer to an array of the struct
+you want to map into.
+
+  // get all the Users
+  var Many []User
+  Users.RetrieveAll(&Many)
+
+  // get all the commentors for an article
+  var Commentors []User
+  Users.Joins(Comments).EqualTo("comments.article_id", CurrentArticle.Id).RetrieveAll(&Commentors)
+
+Future Mapping Functions
+
+The Pluck method allows you to retrieve a selected column from a Scope, Mapper, etc. It
+is then mapped into a simple array value that was passed as the second value.
+
+  // get emails for users who haven't paid for last month
+  var emails []string
+  Users.Joins(Payments).Where("payments.month = ? AND payments.paid_on IS NULL", month).Pluck("email", &emails)
+
+The PluckSeveral is similar to Pluck, but allows you to specify multiple parameters and arrays to
+map results into. It uses a string array for the first parameters, then a variable amount
+of pointers to the arrays for the data.
+
+  // get emails and names for users who have paid for last month
+  var emails, names []string
+  Users.
+    Joins(Payments).
+    Where("payments.month = ? AND payments.paid_on IS NOT NULL", month).
+    Pluck([]string{"name", "email"}, &names, &emails)
+
+The Select function allows you to map specially selected columns and/or formulas into
+purpose-written or anonymous structs. If a table has many columns, or you are returning
+quite a bit of data, this can be a performance boost to use special structs instead of the
+default mapper.
+
+  // get weekly newsletter readers
+  type weeklyReaders struct {
+    Name, Email string
+    Sections string
+  }
+  var readers []weeklyReaders
+
+  columns := "users.name, users.email, GROUP_CONCAT(subscription_sections.name SEPARATOR '|')"
+  Users.Joins(Subscriptions).Joins(SubscriptionSections).GroupBy("users.id").Select(columns, &readers)
+
+
+There are also TableInformation and ScopeInformation interfaces. I would caution use
+of the two interfaces at the moment, as they are intended to be improved heavily before
+a stable release of db. A stable version of db will provide a comprehensive informational
+interface for both Scopes and Mappers, but there are more pressing features than it at the
+moment.
+
+Dialects
+
+A Dialect creates a way for db to talk to a specific RDBMS. The current internal ones are
+mysql, with postgres and sqlite planned for the near future. You can replace existing
+dialects or add your own dialects by writing a struct that corresponds to the Dialect
+interface and then calling RegisterDialect with the name you want the dialect to be
+accessible under and an instance of your dialect struct.
+
+Logging
+
+Before a public announcement of a db version, I need to implement the Logging facilities.
+It won't be difficult, but it takes time. Time that I haven't invested yet.
 */
 package db

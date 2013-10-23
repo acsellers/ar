@@ -1,10 +1,10 @@
 package db
 
 const (
-	WHOLE_TABLE = iota
-	SINGLE_COLUMN
-	FORMULA
-	ALIAS
+	wholeTable = iota
+	singleColumn
+	formula
+	alias
 )
 
 type selector struct {
@@ -18,16 +18,16 @@ type selector struct {
 
 func (s *selector) String() string {
 	switch s.Type {
-	case WHOLE_TABLE:
+	case wholeTable:
 		return s.Table + ".*"
-	case SINGLE_COLUMN:
+	case singleColumn:
 		if s.Alias == "" {
 			return s.Table + "." + s.Column
 		}
 		return s.Table + "." + s.Column + " AS " + s.Alias
-	case FORMULA:
+	case formula:
 		return s.Formula + " AS " + s.Alias
-	case ALIAS:
+	case alias:
 		return printString(s.Value) + " AS " + s.Alias
 	}
 
