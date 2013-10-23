@@ -18,7 +18,7 @@ type user struct {
 func TestUserMapping(t *testing.T) {
 	Within(t, func(test *Test) {
 
-		db, err := sql.Open("mysql", "root:toor@/ar_test?charset=utf8")
+		db, err := sql.Open("mysql", connectionString())
 		if err == nil {
 			conn := new(Connection)
 			conn.DB = db
@@ -30,7 +30,7 @@ func TestUserMapping(t *testing.T) {
 			}
 
 			test.Section("Dialect")
-			cols := conn.Dialect.ColumnsInTable(conn, "ar_test", "user")
+			cols := conn.Dialect.ColumnsInTable(conn, "db_test", "user")
 			verifyUserTable(test, cols)
 
 			test.Section("Mapping")
@@ -48,7 +48,7 @@ func TestUserMapping(t *testing.T) {
 
 func verifyTableExists(db *sql.DB, test *Test) bool {
 	test.Section("Verify Test Database Exists")
-	rows, err := db.Query("SHOW TABLES FROM ar_test")
+	rows, err := db.Query("SHOW TABLES FROM db_test")
 	if err != nil {
 		test.T.Error(err)
 	}
