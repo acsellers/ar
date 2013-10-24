@@ -15,15 +15,22 @@ func stringMatch(items []string, wanted string) bool {
 
 	return false
 }
-func connectionString() string {
-	if os.Getenv("CI") == "yes" {
+func mysqlConnectionString() string {
+	if os.Getenv("TRAVIS") != "" {
 		return "travis:@/db_test?charset=utf8"
 	} else {
 		return "root:toor@/db_test?charset=utf8"
 	}
 }
+func postgresConnectionString() string {
+	if os.Getenv("TRAVIS") != "" {
+		return "user=postgres dbname=db_test"
+	} else {
+		return "user=postgres password=postgres dbname=db_test"
+	}
+}
 func setupMysqlTestConn() *Connection {
-	db, err := sql.Open("mysql", connectionString())
+	db, err := sql.Open("mysql", mysqlConnectionString())
 	if err != nil {
 		panic(err)
 	}
@@ -34,7 +41,7 @@ func setupMysqlTestConn() *Connection {
 		}
 	}
 
-	conn, err := NewConnection("mysql", "db_test", connectionString())
+	conn, err := NewConnection("mysql", "db_test", mysqlConnectionString())
 	if err != nil {
 		panic(err)
 	}
@@ -43,6 +50,29 @@ func setupMysqlTestConn() *Connection {
 
 	return conn
 }
+
+func setupPostgresTestConn() *Connection {
+	db, err := sql.Open("postgres", postgresConnectionString())
+	if err != nil {
+		panic(err)
+	}
+	for _, line := range postgresCreateScript {
+		_, err = db.Exec(line)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	conn, err := NewConnection("postgres", "db_test", postgresConnectionString())
+	if err != nil {
+		panic(err)
+	}
+	conn.Config = NewSimpleConfig()
+	conn.CreateMapper("Post", &post{})
+
+	return conn
+}
+
 func setupSqliteTestConn() *Connection {
 	conn, err := NewConnection("sqlite3", "main", ":memory:")
 	if err != nil {
@@ -65,6 +95,7 @@ func availableTestConns() []*Connection {
 	return []*Connection{
 		setupMysqlTestConn(),
 		setupSqliteTestConn(),
+		setupPostgresTestConn(),
 	}
 }
 
@@ -74,6 +105,13 @@ type post struct {
 	Permalink string
 	Body      string
 	Views     int
+}
+type user struct {
+	ID       int
+	Name     string
+	Email    string
+	Password string
+	Story    string
 }
 
 var mysqlCreateScript = []string{
@@ -146,4 +184,36 @@ var sqliteCreateScript = []string{
   CONSTRAINT "unique_name" UNIQUE ( "name" ) );`,
 
 	`CREATE INDEX "index_id1" ON "user"( "id" );`,
+}
+
+var postgresCreateScript = []string{
+	`DROP TABLE IF EXISTS "post"`,
+	`CREATE TABLE post(
+    id bigserial NOT NULL,
+    title character varying(255) NOT NULL,
+    permalink character varying(255) NOT NULL,
+    body text,
+    views integer NOT NULL DEFAULT 1,
+    CONSTRAINT pk_post PRIMARY KEY (id)
+  ) WITH (
+    OIDS=FALSE
+  );`,
+	`ALTER TABLE post OWNER TO postgres;`,
+	"INSERT INTO post (id,title,permalink,body,views) VALUES ( 1, 'First Post', 'first_post', 'This is the first post', 1);",
+	"INSERT INTO post (id,title,permalink,body,views) VALUES ( 2, 'Second Post', 'second_post', 'Hey must be committed to this, I wrote a second post', 1);",
+	`DROP TABLE IF EXISTS "user"`,
+	`CREATE TABLE "user" (
+    id bigserial NOT NULL,
+    email character varying(255) NOT NULL,
+    password character varying(255) NOT NULL,
+    story text,
+    image bytea,
+    name character varying(255) NOT NULL,
+    CONSTRAINT pk_user PRIMARY KEY (id),
+    CONSTRAINT unique_email UNIQUE (email),
+    CONSTRAINT unique_name UNIQUE (name)
+  ) WITH (
+    OIDS=FALSE
+  );`,
+	`ALTER TABLE "user" OWNER TO postgres;`,
 }

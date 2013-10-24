@@ -37,7 +37,7 @@ func (d base) Query(scope Scope) (string, []interface{}) {
 	}
 	output += scope.EndingSql()
 
-	return output, values
+	return d.dialect.FormatQuery(output), values
 }
 
 func (d base) Create(mapper Mapper, values map[string]interface{}) (string, []interface{}) {
@@ -50,7 +50,7 @@ func (d base) Create(mapper Mapper, values map[string]interface{}) (string, []in
 		output += col + " = ? "
 	}
 
-	return output, sqlVals
+	return d.dialect.FormatQuery(output), sqlVals
 }
 
 func (d base) Update(scope Scope, values map[string]interface{}) (string, []interface{}) {
@@ -65,7 +65,7 @@ func (d base) Update(scope Scope, values map[string]interface{}) (string, []inte
 	conditions, sqlArgs := scope.ConditionSql()
 	output += " WHERE " + conditions
 
-	return output, append(args, sqlArgs...)
+	return d.dialect.FormatQuery(output), append(args, sqlArgs...)
 }
 
 func (d base) Delete(scope Scope) (string, []interface{}) {
@@ -73,7 +73,7 @@ func (d base) Delete(scope Scope) (string, []interface{}) {
 	conditions, sqlArgs := scope.ConditionSql()
 	output += " WHERE " + conditions
 
-	return output, sqlArgs
+	return d.dialect.FormatQuery(output), sqlArgs
 }
 
 /*
@@ -121,7 +121,7 @@ func (d base) DeleteSql(queryable *Queryable) (string, []interface{}) {
 func (d base) ColumnsInTable(db *sql.DB, dbName string, table string) map[string]*columnInfo {
 	columns := make(map[string]*columnInfo)
 	query := "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
-	query = d.FormatQuery(query)
+	query = d.dialect.FormatQuery(query)
 	rows, err := db.Query(query, dbName, table)
 	defer rows.Close()
 	if err != nil {

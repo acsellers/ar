@@ -3,8 +3,9 @@ go:
   - 1.1
 before_script:
   - mysql -e 'create database db_test;'
+  - psql -c 'create database db_test;' -U postgres
   - go get github.com/acsellers/assert
   - go get github.com/acsellers/inflections
   - go get github.com/go-sql-driver/mysql
   - go get code.google.com/p/go-sqlite/go1/sqlite3
-env: CI=yes
+  - go get github.com/lib/pq

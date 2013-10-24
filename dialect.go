@@ -11,6 +11,7 @@ func init() {
 
 	registeredDialects["mysql"] = newMysql()
 	registeredDialects["sqlite3"] = newSqlite()
+	registeredDialects["postgres"] = newPostgres()
 }
 
 // If you have an external dialect, use this function to

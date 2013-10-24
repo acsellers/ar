@@ -6,18 +6,10 @@ import (
 	"testing"
 )
 
-type user struct {
-	ID       int
-	Name     string
-	Email    string
-	Password string
-	Story    string
-}
-
 func TestUserMapping(t *testing.T) {
 	Within(t, func(test *Test) {
 
-		db, err := sql.Open("mysql", connectionString())
+		db, err := sql.Open("mysql", mysqlConnectionString())
 		if err == nil {
 			conn := new(Connection)
 			conn.DB = db
