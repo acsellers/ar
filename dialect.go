@@ -10,6 +10,7 @@ func init() {
 	registeredDialects = make(map[string]Dialect)
 
 	registeredDialects["mysql"] = newMysql()
+	registeredDialects["sqlite3"] = newSqlite()
 }
 
 // If you have an external dialect, use this function to

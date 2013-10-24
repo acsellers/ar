@@ -326,7 +326,7 @@ moment.
 Dialects
 
 A Dialect creates a way for db to talk to a specific RDBMS. The current internal ones are
-mysql, with postgres and sqlite planned for the near future. You can replace existing
+mysql and sqlite3, with postgres planned for the near future. You can replace existing
 dialects or add your own dialects by writing a struct that corresponds to the Dialect
 interface and then calling RegisterDialect with the name you want the dialect to be
 accessible under and an instance of your dialect struct.

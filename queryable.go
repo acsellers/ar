@@ -190,10 +190,10 @@ func (q *queryable) Retrieve(val interface{}) error {
 func (q *queryable) RetrieveAll(dest interface{}) error {
 	query, values := q.source.conn.Dialect.Query(q)
 	rows, err := q.source.runQuery(query, values)
-	defer rows.Close()
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 	if reflect.TypeOf(dest).Kind() != reflect.Ptr {
 		return errors.New("Must Supply Ptr to Destination")
 	}

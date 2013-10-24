@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"regexp"
 	"strconv"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var typeRegex = regexp.MustCompile("^([a-zA-Z0-9]+)(\\([0-9]+\\))?(.*)")

@@ -22,12 +22,12 @@ func connectionString() string {
 		return "root:toor@/db_test?charset=utf8"
 	}
 }
-func setupDefaultConn() *Connection {
+func setupMysqlTestConn() *Connection {
 	db, err := sql.Open("mysql", connectionString())
 	if err != nil {
 		panic(err)
 	}
-	for _, line := range createScript {
+	for _, line := range mysqlCreateScript {
 		_, err = db.Exec(line)
 		if err != nil {
 			panic(err)
@@ -43,6 +43,30 @@ func setupDefaultConn() *Connection {
 
 	return conn
 }
+func setupSqliteTestConn() *Connection {
+	conn, err := NewConnection("sqlite3", "main", ":memory:")
+	if err != nil {
+		panic(err)
+	}
+	for _, line := range sqliteCreateScript {
+		_, err = conn.DB.Exec(line)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	conn.Config = NewSimpleConfig()
+	conn.CreateMapper("Post", &post{})
+
+	return conn
+}
+
+func availableTestConns() []*Connection {
+	return []*Connection{
+		setupMysqlTestConn(),
+		setupSqliteTestConn(),
+	}
+}
 
 type post struct {
 	ID        int
@@ -52,7 +76,7 @@ type post struct {
 	Views     int
 }
 
-var createScript = []string{
+var mysqlCreateScript = []string{
 	"DROP TABLE IF EXISTS `post` CASCADE;",
 	"CREATE TABLE `post` ( \n" +
 		"	`id` Int( 255 ) UNSIGNED AUTO_INCREMENT NOT NULL, \n" +
@@ -88,4 +112,38 @@ var createScript = []string{
 	"CREATE UNIQUE INDEX `unique_email` USING BTREE ON `user`( `email` );\n",
 	"CREATE UNIQUE INDEX `unique_id` USING BTREE ON `user`( `id` );\n",
 	"CREATE UNIQUE INDEX `unique_name` USING BTREE ON `user`( `name` );",
+}
+
+var sqliteCreateScript = []string{
+	`DROP TABLE IF EXISTS "post";`,
+
+	`CREATE TABLE "post"(
+    "id" Integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "title" Text NOT NULL,
+    "permalink" Text NOT NULL,
+    "body" Text NOT NULL,
+    "views" Integer NOT NULL DEFAULT 1,
+    "author" Integer NOT NULL,
+  CONSTRAINT "unique_id" UNIQUE ( "id" ),
+  CONSTRAINT "unique_permalink" UNIQUE ( "permalink" ) );`,
+
+	`CREATE INDEX "index_id" ON "post"( "id" );`,
+
+	`INSERT INTO "post"("id","title","permalink","body","views","author") VALUES ( 1,'First Post','first_post','This is the first post',1,0 );`,
+	`INSERT INTO "post"("id","title","permalink","body","views","author") VALUES ( 2,'Second Post','second_post','Hey must be committed to this, I wrote a second post',1,0 );`,
+
+	`DROP TABLE IF EXISTS "user";`,
+
+	`CREATE TABLE "user"(
+    "id" Integer NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "name" Text NOT NULL,
+    "email" Text NOT NULL,
+    "password" Text NOT NULL,
+    "story" Text NOT NULL,
+    "image" BLOB,
+  CONSTRAINT "unique_email" UNIQUE ( "email" ),
+  CONSTRAINT "unique_id" UNIQUE ( "id" ),
+  CONSTRAINT "unique_name" UNIQUE ( "name" ) );`,
+
+	`CREATE INDEX "index_id1" ON "user"( "id" );`,
 }
