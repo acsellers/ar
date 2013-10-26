@@ -10,7 +10,7 @@ func NewSimpleConfig() *Config {
 	c.TableToStruct = strings.ToTitle
 	c.FieldToColumn = strings.ToLower
 	c.ColumnToField = strings.ToTitle
-	c.IdName = "ID"
+	c.IdName = "Id"
 	c.CreatedColumn = "Creation"
 	c.UpdatedColumn = "Modified"
 

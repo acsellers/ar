@@ -48,3 +48,22 @@ func TestPostMapper(t *testing.T) {
 		}
 	})
 }
+
+func TestEqualTo(t *testing.T) {
+	Within(t, func(test *Test) {
+		for _, c := range availableTestConns() {
+			Posts := c.m("Post")
+			test.IsNotNil(Posts)
+
+			var posts []post
+			Posts.EqualTo("permalink", "first_post").RetrieveAll(&posts)
+			test.AreEqual(1, len(posts))
+			test.AreEqual("First Post", posts[0].Title)
+
+			var singlepost post
+			Posts.EqualTo("permalink", "second_post").Retrieve(&singlepost)
+			test.AreEqual(2, singlepost.Id)
+			test.AreEqual("Second Post", singlepost.Title)
+		}
+	})
+}

@@ -93,7 +93,7 @@ func verifyMapper(test *Test, mapper Mapper) {
 	test.AreEqual(len(mapper.(*source).Fields), 5)
 	test.AreEqual(mapper.(*source).ColNum, 6)
 	columnMappings := map[string][]string{
-		"ID":       []string{"id", "int"},
+		"Id":       []string{"id", "int"},
 		"Name":     []string{"name", "varchar"},
 		"Email":    []string{"email", "varchar"},
 		"Password": []string{"password", "varchar"},

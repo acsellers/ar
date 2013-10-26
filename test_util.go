@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+var cachedConnection []*Connection
+
 func stringMatch(items []string, wanted string) bool {
 	for _, item := range items {
 		if item == wanted {
@@ -92,22 +94,26 @@ func setupSqliteTestConn() *Connection {
 }
 
 func availableTestConns() []*Connection {
-	return []*Connection{
-		setupMysqlTestConn(),
-		setupSqliteTestConn(),
-		setupPostgresTestConn(),
+	if len(cachedConnection) == 0 {
+		cachedConnection = []*Connection{
+			setupMysqlTestConn(),
+			setupSqliteTestConn(),
+			setupPostgresTestConn(),
+		}
+		return cachedConnection
 	}
+	return cachedConnection
 }
 
 type post struct {
-	ID        int
+	Id        int
 	Title     string
 	Permalink string
 	Body      string
 	Views     int
 }
 type user struct {
-	ID       int
+	Id       int
 	Name     string
 	Email    string
 	Password string
