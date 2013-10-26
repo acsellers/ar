@@ -13,8 +13,8 @@ func (s *source) Where(fragment string, args ...interface{}) Scope {
 	return s.Identity().Where(fragment, args...)
 }
 
-func (s *source) Cond(column string, condition int, val ...interface{}) Scope {
-	return s.Identity().Cond(column, condition, val...)
+func (s *source) Cond(column string, condition int, val interface{}) Scope {
+	return s.Identity().Cond(column, condition, val)
 }
 
 func (m *source) EqualTo(column string, val interface{}) Scope {

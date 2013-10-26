@@ -3,7 +3,7 @@ package db
 type Queryable interface {
 	Identity() Scope
 
-	Cond(column string, condition int, val ...interface{}) Scope
+	Cond(column string, condition int, val interface{}) Scope
 
 	EqualTo(column string, val interface{}) Scope
 	Between(column string, lower, upper interface{}) Scope

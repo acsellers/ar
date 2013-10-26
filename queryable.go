@@ -119,7 +119,7 @@ func (q *queryable) In(column string, vals []interface{}) Scope {
 	return nq
 }
 
-func (q *queryable) Cond(column string, condition int, val ...interface{}) Scope {
+func (q *queryable) Cond(column string, condition int, val interface{}) Scope {
 	nq := q.Identity().(*queryable)
 	nq.conditions = append(nq.conditions, &varyCondition{column, condition, val})
 
@@ -199,7 +199,7 @@ func (q *queryable) RetrieveAll(dest interface{}) error {
 	}
 	destVal := reflect.ValueOf(dest)
 	destSliceVal := destVal.Elem()
-	tempSliceVal := destSliceVal
+	tempSliceVal := reflect.Zero(destSliceVal.Type())
 	element := destSliceVal.Type().Elem()
 	vn := reflect.New(element)
 	rfltr := reflector{vn}

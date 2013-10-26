@@ -67,3 +67,25 @@ func TestEqualTo(t *testing.T) {
 		}
 	})
 }
+
+func TestCond(t *testing.T) {
+	Within(t, func(test *Test) {
+		for _, c := range availableTestConns() {
+			Posts := c.m("Post")
+			test.IsNotNil(Posts)
+
+			var posts []post
+			Posts.Cond("id", GTE, 1).RetrieveAll(&posts)
+			test.AreEqual(2, len(posts))
+			if len(posts) == 2 {
+				test.AreEqual("First Post", posts[0].Title)
+			}
+
+			Posts.Cond("id", GT, 1).RetrieveAll(&posts)
+			test.AreEqual(1, len(posts))
+			if len(posts) == 1 {
+				test.AreEqual("Second Post", posts[0].Title)
+			}
+		}
+	})
+}
