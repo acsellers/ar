@@ -1,6 +1,8 @@
 DB - Sql Database Adapter
 =========================
 
+[![Build Status](https://travis-ci.org/acsellers/db.png)](https://travis-ci.org/acsellers/db)
+
 There are plenty of mappers for Go, take your pick. DB has no desire to be just
 a mapper, DB wants to be a very good mapper, as well as a something more.
 
