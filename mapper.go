@@ -25,10 +25,6 @@ func (m *source) Between(column string, lower, upper interface{}) Scope {
 	return m.Identity().Between(column, lower, upper)
 }
 
-func (m *source) In(column string, vals []interface{}) Scope {
-	return m.Identity().In(column, vals)
-}
-
 func (m *source) Limit(limit int) Scope {
 	return m.Identity().Limit(limit)
 }

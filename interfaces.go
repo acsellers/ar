@@ -7,7 +7,6 @@ type Queryable interface {
 
 	EqualTo(column string, val interface{}) Scope
 	Between(column string, lower, upper interface{}) Scope
-	In(column string, vals []interface{}) Scope
 	Where(fragment string, args ...interface{}) Scope
 
 	Limit(limit int) Scope

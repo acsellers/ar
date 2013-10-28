@@ -112,3 +112,25 @@ func TestBetween(t *testing.T) {
 		}
 	})
 }
+
+func TestWhere(t *testing.T) {
+	Within(t, func(test *Test) {
+		for _, c := range availableTestConns() {
+			Posts := c.m("Post")
+			test.IsNotNil(Posts)
+
+			var posts []post
+			Posts.Where("id BETWEEN ? AND ?", 0, 2).RetrieveAll(&posts)
+			test.AreEqual(2, len(posts))
+			if len(posts) == 2 {
+				test.AreEqual("First Post", posts[0].Title)
+			}
+
+			Posts.Where("title LIKE ?", "%Post%").RetrieveAll(&posts)
+			test.AreEqual(2, len(posts))
+			if len(posts) == 2 {
+				test.AreEqual("First Post", posts[0].Title)
+			}
+		}
+	})
+}

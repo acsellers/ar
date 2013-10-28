@@ -5,33 +5,6 @@ import (
 	"testing"
 )
 
-func TestInCondition(t *testing.T) {
-	Within(t, func(test *Test) {
-		test.Section("Setup In Condition")
-		ic := &inCondition{"test_tbl.test_col", []interface{}{1, 2, 3, 4}}
-		test.AreEqual(len(ic.vals), 4, "Vals not equal")
-		test.AreEqual(ic.Values(), []interface{}{[]interface{}{1, 2, 3, 4}})
-
-		test.Section("Test In Condition SQL")
-		test.F.AreEqual(
-			ic.Fragment(),
-			"test_tbl.test_col IN (?)",
-			"Fragment not correctly generated for IN condition, expected %s, got %s",
-			"test_tbl.test_col IN (?)",
-			ic.Fragment(),
-		)
-
-		test.Section("Test In Condition Log")
-		test.F.AreEqual(
-			ic.String(),
-			"test_tbl.test_col IN (1,2,3,4)",
-			"String not correctly generated for IN condition, expected %s, got %s",
-			"test_tbl.test_col IN (1,2,3,4)",
-			ic.String(),
-		)
-	})
-}
-
 func TestBetweenCondition(t *testing.T) {
 	Within(t, func(test *Test) {
 		test.Section("Setup Between Condition")

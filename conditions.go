@@ -72,21 +72,6 @@ func (ac *andCondition) Values() []interface{} {
 	return vals
 }
 
-type inCondition struct {
-	column string
-	vals   []interface{}
-}
-
-func (ic *inCondition) String() string {
-	return withVars(ic.column+" IN (?)", []interface{}{ic.vals})
-}
-func (ic *inCondition) Fragment() string {
-	return ic.column + " IN (?)"
-}
-func (ic *inCondition) Values() []interface{} {
-	return []interface{}{ic.vals}
-}
-
 type betweenCondition struct {
 	column       string
 	lower, upper interface{}

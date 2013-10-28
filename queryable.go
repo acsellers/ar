@@ -113,12 +113,6 @@ func (q *queryable) Between(column string, lower, upper interface{}) Scope {
 	return nq
 }
 
-func (q *queryable) In(column string, vals []interface{}) Scope {
-	nq := q.Identity().(*queryable)
-	nq.conditions = append(nq.conditions, &inCondition{column, vals})
-	return nq
-}
-
 func (q *queryable) Cond(column string, condition int, val interface{}) Scope {
 	nq := q.Identity().(*queryable)
 	nq.conditions = append(nq.conditions, &varyCondition{column, condition, val})
