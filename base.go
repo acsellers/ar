@@ -41,14 +41,17 @@ func (d base) Query(scope Scope) (string, []interface{}) {
 }
 
 func (d base) Create(mapper Mapper, values map[string]interface{}) (string, []interface{}) {
-	output := "INSERT INTO " + mapper.TableName() + " SET "
+	output := "INSERT INTO " + mapper.TableName() + " ("
 	sqlVals := make([]interface{}, len(values))
 	current := 0
+	var holders, cols []string
 	for col, val := range values {
 		sqlVals[current] = val
+		cols = append(cols, col)
+		holders = append(holders, "?")
 		current++
-		output += col + " = ? "
 	}
+	output += strings.Join(cols, ",") + ") VALUES (" + strings.Join(holders, ",") + ")"
 
 	return d.dialect.FormatQuery(output), sqlVals
 }

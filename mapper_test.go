@@ -140,3 +140,33 @@ func TestWhere(t *testing.T) {
 		}
 	})
 }
+
+func TestSave(t *testing.T) {
+	Within(t, func(test *Test) {
+		for _, c := range availableTestConns()[1:2] {
+			Posts := c.m("Post")
+			newpost := post{
+				Title:     "New Post",
+				Permalink: "new_post",
+				Body:      "LOOK AT THIS POAST",
+			}
+
+			test.NoError(Posts.SaveAll(&newpost))
+			test.AreEqual(3, newpost.Id)
+
+			var posts []post
+			test.NoError(Posts.RetrieveAll(&posts))
+			test.AreEqual(3, len(posts))
+			test.AreEqual(1, posts[0].Id)
+			test.AreEqual(2, posts[1].Id)
+			test.AreEqual(3, posts[2].Id)
+
+			newpost.Title = "Super Post"
+			test.NoError(Posts.SaveAll(&newpost))
+			posts = []post{}
+			test.NoError(Posts.EqualTo("title", "Super Post").RetrieveAll(&posts))
+			test.AreEqual(1, len(posts))
+			test.AreEqual(3, posts[0].Id)
+		}
+	})
+}

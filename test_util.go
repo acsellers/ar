@@ -128,7 +128,7 @@ var mysqlCreateScript = []string{
 		"	`permalink` VarChar( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL, \n" +
 		"	`body` Text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL, \n" +
 		"	`views` Int( 255 ) UNSIGNED NOT NULL DEFAULT '1', \n" +
-		"	`author` Int( 255 ) UNSIGNED NOT NULL,\n" +
+		"	`author` Int( 255 ) UNSIGNED,\n" +
 		"	 PRIMARY KEY ( `id` )\n" +
 		" )\n" +
 		"CHARACTER SET = utf8\n" +
@@ -167,7 +167,7 @@ var sqliteCreateScript = []string{
     "permalink" Text NOT NULL,
     "body" Text NOT NULL,
     "views" Integer NOT NULL DEFAULT 1,
-    "author" Integer NOT NULL,
+    "author" Integer,
   CONSTRAINT "unique_id" UNIQUE ( "id" ),
   CONSTRAINT "unique_permalink" UNIQUE ( "permalink" ) );`,
 

@@ -208,7 +208,7 @@ within a SQL statement.
 
   // find appointments that will be missed
   Attendees.Where(
-    "user_ids IN (:students) AND cancelled_on IS NULL AND begin_time BETWEEN :begin AND :end",
+    "user_ids IN (:students:) AND cancelled_on IS NULL AND begin_time BETWEEN :begin: AND :end:",
     map[string]interface{}{
       "students": userIds,
       "begin":    tripBeginning,
@@ -281,7 +281,36 @@ you want to map into.
   var Commentors []User
   Users.Joins(Comments).EqualTo("comments.article_id", CurrentArticle.Id).RetrieveAll(&Commentors)
 
-Future Mapping Functions
+
+Saving and Updating Values
+
+You can save slices of new structs into the database using a Mapper using the SaveAll
+call. You can also save single instances of structs as well using SaveAll, but you
+will need to pass a pointer to the struct instance, so the mapper can update the
+instance with the primary key assigned to that struct.
+
+    // newPost is an unsaved post and newPost.Id is the zero value
+    Posts.SaveAll(&post)
+    // now post.Id will equal the primary key of the db record associated with it
+
+    // otherPosts is an array of posts some of which are new, some of which need to be updated
+    Posts.SaveAll(otherPosts)
+    // posts that need to be saved, will be saved and their slice instance should be updated,
+    // no matter whether the slice is of []Post or []*Post
+
+You can also update columns in the database off of a Scope or a Mapper. There are three
+functions, UpdateAttribute, UpdateAttributes, and UpdateSql that will to this for you.
+UpdateAttribute takes a column name and a value, and will then update that column to
+the value for all the database rows that would match the scope. UpdateAttributes takes a
+map of column names to values so you may update more than 1 column at once. UpdateSql takes
+a sql fragment and will allow you to write sql that uses sql functions instead of using dumb
+values. UpdateSql will be less used when db.Formula objects are implemented. UpdateSql is
+not yet implemented as well.
+
+  Posts.EqualTo("late", true).UpdateAttribute("delete_on", time.Now().Add(10 * time.Minute))
+
+
+Future Retrieval Methods
 
 The Pluck method allows you to retrieve a selected column from a Scope, Mapper, etc. It
 is then mapped into a simple array value that was passed as the second value.

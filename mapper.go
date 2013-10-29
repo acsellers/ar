@@ -100,6 +100,11 @@ func (m *source) saveItem(v reflect.Value) error {
 
 func (m *source) createItem(v reflect.Value) error {
 	values := m.extractColumnValues(v)
+	for c, _ := range values {
+		if c == m.ID.SqlColumn {
+			delete(values, c)
+		}
+	}
 	query, vals := m.conn.Dialect.Create(m, values)
 	result, err := m.runExec(query, vals)
 	if err != nil {
