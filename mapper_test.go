@@ -131,6 +131,12 @@ func TestWhere(t *testing.T) {
 			if len(posts) == 2 {
 				test.AreEqual("First Post", posts[0].Title)
 			}
+
+			Posts.Where("id = :id:", map[string]interface{}{"id": 1}).RetrieveAll(&posts)
+			test.AreEqual(1, len(posts))
+			if len(posts) == 1 {
+				test.AreEqual("First Post", posts[0].Title)
+			}
 		}
 	})
 }
