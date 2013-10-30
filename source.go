@@ -107,6 +107,10 @@ func (s *source) runQuery(query string, values []interface{}) (*sql.Rows, error)
 	return s.conn.DB.Query(query, values...)
 }
 
+func (s *source) runQueryRow(query string, values []interface{}) *sql.Row {
+	return s.conn.DB.QueryRow(query, values...)
+}
+
 func (s *source) runExec(query string, values []interface{}) (sql.Result, error) {
 	return s.conn.DB.Exec(query, values...)
 }

@@ -28,6 +28,7 @@ type Dialect interface {
 	FormatQuery(query string) string
 	Query(scope Scope) (string, []interface{})
 	Create(mapper Mapper, values map[string]interface{}) (string, []interface{})
+	CreateExec() bool
 	Update(scope Scope, values map[string]interface{}) (string, []interface{})
 	Delete(scope Scope) (string, []interface{})
 

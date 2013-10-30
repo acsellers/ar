@@ -30,6 +30,7 @@ type SQLable interface {
 
 type TableInformation interface {
 	TableName() string
+	PrimaryKeyColumn() string
 }
 
 type ScopeInformation interface {

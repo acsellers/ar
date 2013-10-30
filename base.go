@@ -15,6 +15,10 @@ func (d base) FormatQuery(query string) string {
 	return query
 }
 
+func (d base) CreateExec() bool {
+	return true
+}
+
 func (d base) Quote(s string) string {
 	segs := strings.Split(s, ".")
 	buf := new(bytes.Buffer)
@@ -72,7 +76,7 @@ func (d base) Update(scope Scope, values map[string]interface{}) (string, []inte
 }
 
 func (d base) Delete(scope Scope) (string, []interface{}) {
-	output := "DELETE FROM " + scope.TableName() + " SET "
+	output := "DELETE FROM " + scope.TableName()
 	conditions, sqlArgs := scope.ConditionSql()
 	output += " WHERE " + conditions
 

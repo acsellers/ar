@@ -205,8 +205,8 @@ var postgresCreateScript = []string{
     OIDS=FALSE
   );`,
 	`ALTER TABLE post OWNER TO postgres;`,
-	"INSERT INTO post (id,title,permalink,body,views) VALUES ( 1, 'First Post', 'first_post', 'This is the first post', 1);",
-	"INSERT INTO post (id,title,permalink,body,views) VALUES ( 2, 'Second Post', 'second_post', 'Hey must be committed to this, I wrote a second post', 1);",
+	"INSERT INTO post (title,permalink,body,views) VALUES ('First Post', 'first_post', 'This is the first post', 1);",
+	"INSERT INTO post (title,permalink,body,views) VALUES ('Second Post', 'second_post', 'Hey must be committed to this, I wrote a second post', 1);",
 	`DROP TABLE IF EXISTS "user"`,
 	`CREATE TABLE "user" (
     id bigserial NOT NULL,

@@ -94,3 +94,24 @@ func (d postgresDialect) FormatQuery(query string) string {
 
 	return strings.Join(newQuery, "")
 }
+
+func (d postgresDialect) CreateExec() bool {
+	return false
+}
+
+func (d postgresDialect) Create(mapper Mapper, values map[string]interface{}) (string, []interface{}) {
+	output := "INSERT INTO " + mapper.TableName() + " ("
+	sqlVals := make([]interface{}, len(values))
+	current := 0
+	var holders, cols []string
+	for col, val := range values {
+		sqlVals[current] = val
+		cols = append(cols, col)
+		holders = append(holders, "?")
+		current++
+	}
+	output += strings.Join(cols, ",") + ") VALUES (" + strings.Join(holders, ",") + ")"
+	output += " RETURNING " + mapper.PrimaryKeyColumn()
+
+	return d.dialect.FormatQuery(output), sqlVals
+}

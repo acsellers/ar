@@ -108,6 +108,10 @@ func (mp *mapperPlus) TableName() string {
 	return mp.source.TableName()
 }
 
+func (mp *mapperPlus) PrimaryKeyColumn() string {
+	return mp.source.PrimaryKeyColumn()
+}
+
 func (mp *mapperPlus) UpdateAttribute(column string, val interface{}) error {
 	return mp.identity().UpdateAttribute(column, val)
 }

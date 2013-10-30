@@ -106,15 +106,25 @@ func (m *source) createItem(v reflect.Value) error {
 		}
 	}
 	query, vals := m.conn.Dialect.Create(m, values)
-	result, err := m.runExec(query, vals)
-	if err != nil {
-		return err
+	if m.conn.Dialect.CreateExec() {
+		result, err := m.runExec(query, vals)
+		if err != nil {
+			return err
+		}
+		newId, err := result.LastInsertId()
+		if err != nil {
+			return err
+		}
+		m.setID(v, newId)
+	} else {
+		result := m.runQueryRow(query, vals)
+		var newId int64
+		err := result.Scan(&newId)
+		if err != nil {
+			return err
+		}
+		m.setID(v, newId)
 	}
-	newId, err := result.LastInsertId()
-	if err != nil {
-		return err
-	}
-	m.setID(v, newId)
 
 	return nil
 }
@@ -142,4 +152,8 @@ func (m *source) extractColumnValues(v reflect.Value) map[string]interface{} {
 
 func (s *source) TableName() string {
 	return s.SqlName
+}
+
+func (s *source) PrimaryKeyColumn() string {
+	return s.ID.SqlColumn
 }

@@ -143,7 +143,7 @@ func TestWhere(t *testing.T) {
 
 func TestSave(t *testing.T) {
 	Within(t, func(test *Test) {
-		for _, c := range availableTestConns()[1:2] {
+		for _, c := range availableTestConns() {
 			Posts := c.m("Post")
 			newpost := post{
 				Title:     "New Post",
@@ -167,6 +167,10 @@ func TestSave(t *testing.T) {
 			test.NoError(Posts.EqualTo("title", "Super Post").RetrieveAll(&posts))
 			test.AreEqual(1, len(posts))
 			test.AreEqual(3, posts[0].Id)
+
+			test.NoError(Posts.EqualTo("id", 3).Delete())
+			test.NoError(Posts.RetrieveAll(&posts))
+			test.AreEqual(2, len(posts))
 		}
 	})
 }
