@@ -63,6 +63,22 @@ func (m *source) Count() (int64, error) {
 	return m.Identity().Count()
 }
 
+func (m *source) Delete() error {
+	return m.Identity().Delete()
+}
+
+func (m *source) UpdateAttribute(column string, val interface{}) error {
+	return m.Identity().UpdateAttribute(column, val)
+}
+
+func (m *source) UpdateAttributes(values map[string]interface{}) error {
+	return m.Identity().UpdateAttributes(values)
+}
+
+func (m *source) UpdateSql(sql string, vals ...interface{}) error {
+	return m.Identity().UpdateSql(sql, vals...)
+}
+
 func (m *source) Initialize(vals ...interface{}) error {
 	for _, val := range vals {
 		rt := reflect.TypeOf(val)

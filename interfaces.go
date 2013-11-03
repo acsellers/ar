@@ -20,9 +20,7 @@ type Queryable interface {
 	Retrieve(val interface{}) error
 	RetrieveAll(dest interface{}) error
 	Count() (int64, error)
-}
 
-type SQLable interface {
 	Delete() error
 	UpdateAttribute(column string, val interface{}) error
 	UpdateAttributes(values map[string]interface{}) error
@@ -50,14 +48,12 @@ type Mapper interface {
 
 type MapperPlus interface {
 	Mapper
-	SQLable
 	ScopeInformation
 	Dupe() MapperPlus
 }
 
 type Scope interface {
 	Queryable
-	SQLable
 	TableInformation
 	ScopeInformation
 }
