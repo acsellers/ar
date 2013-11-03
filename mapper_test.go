@@ -240,3 +240,16 @@ func TestMixin(t *testing.T) {
 		}
 	})
 }
+
+func TestPluck(t *testing.T) {
+	Within(t, func(test *Test) {
+		for _, c := range availableTestConns() {
+			Posts := c.m("Post")
+			var titles []string
+			test.NoError(Posts.OrderBy("id", "ASC").Pluck("title", &titles))
+			test.AreEqual(2, len(titles))
+			test.AreEqual(titles[0], "First Post")
+			test.AreEqual(titles[1], "Second Post")
+		}
+	})
+}

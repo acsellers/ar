@@ -79,6 +79,10 @@ func (m *source) UpdateSql(sql string, vals ...interface{}) error {
 	return m.Identity().UpdateSql(sql, vals...)
 }
 
+func (m *source) Pluck(column string, vals interface{}) error {
+	return m.Identity().Pluck(column, vals)
+}
+
 func (m *source) Initialize(vals ...interface{}) error {
 	for _, val := range vals {
 		rt := reflect.TypeOf(val)

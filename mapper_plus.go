@@ -110,6 +110,9 @@ func (mp *mapperPlus) Count() (int64, error) {
 	return mp.identity().Count()
 }
 
+func (mp *mapperPlus) Pluck(column string, vals interface{}) error {
+	return mp.identity().Pluck(column, vals)
+}
 func (mp *mapperPlus) TableName() string {
 	return mp.source.TableName()
 }

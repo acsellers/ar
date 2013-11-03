@@ -309,8 +309,14 @@ not yet implemented as well.
 
   Posts.EqualTo("late", true).UpdateAttribute("delete_on", time.Now().Add(10 * time.Minute))
 
+The Count method allows you to retrieve a count of the rows that would be retrieved from
+a Scope or Mapper.
 
-Future Retrieval Methods
+  // Returns the number of Posts saved in the database
+  Posts.Count()
+
+  // Returns the number of Posts written by a specific user
+  user.Posts.Count()
 
 The Pluck method allows you to retrieve a selected column from a Scope, Mapper, etc. It
 is then mapped into a simple array value that was passed as the second value.
@@ -318,6 +324,14 @@ is then mapped into a simple array value that was passed as the second value.
   // get emails for users who haven't paid for last month
   var emails []string
   Users.Joins(Payments).Where("payments.month = ? AND payments.paid_on IS NULL", month).Pluck("email", &emails)
+
+Possible Future Retrieval Methods
+
+The CountOn method is a user controlled version of Count. If you would like to specify
+a specific column, perhaps to do a DISTINCT count on, this is what you want.
+
+  // get total number of distinct authors for a category of posts
+  Posts.CountOn("DISTINCT category_id")
 
 The PluckSeveral is similar to Pluck, but allows you to specify multiple parameters and arrays to
 map results into. It uses a string array for the first parameters, then a variable amount

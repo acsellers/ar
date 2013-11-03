@@ -25,6 +25,8 @@ type Queryable interface {
 	UpdateAttribute(column string, val interface{}) error
 	UpdateAttributes(values map[string]interface{}) error
 	UpdateSql(sql string, vals ...interface{}) error
+
+	Pluck(column string, values interface{}) error
 }
 
 type TableInformation interface {

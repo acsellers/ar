@@ -78,7 +78,7 @@ func (queryable *queryable) EndingSql() string {
 		output += " GROUP BY " + queryable.groupBy
 	}
 	if len(queryable.order) > 0 {
-		output += strings.Join(queryable.order, ", ")
+		output += " ORDER BY " + strings.Join(queryable.order, ", ")
 	}
 	if queryable.limit != 0 {
 		output += " LIMIT " + fmt.Sprint(queryable.limit)
@@ -226,6 +226,37 @@ func (q *queryable) Count() (int64, error) {
 	err := row.Scan(&count)
 
 	return count, err
+}
+
+func (q *queryable) Pluck(column string, val interface{}) error {
+	if strings.Index(column, ".") == -1 {
+		column = q.source.SqlName + "." + column
+	}
+	qq := q.Identity().(*queryable)
+	qq.selection = []selector{selector{Formula: column}}
+
+	query, values := qq.source.conn.Dialect.Query(qq)
+	rows, err := qq.source.runQuery(query, values)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	destVal := reflect.ValueOf(val)
+	destSliceVal := destVal.Elem()
+	tempSliceVal := reflect.Zero(destSliceVal.Type())
+	element := destSliceVal.Type().Elem()
+	vn := reflect.New(element)
+	for rows.Next() {
+		err = rows.Scan(vn.Interface())
+		if err != nil {
+			return err
+		}
+		tempSliceVal = reflect.Append(tempSliceVal, vn.Elem())
+	}
+	destSliceVal.Set(tempSliceVal)
+
+	return err
 }
 
 func (q *queryable) UpdateAttribute(column string, val interface{}) error {
