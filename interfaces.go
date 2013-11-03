@@ -19,6 +19,7 @@ type Queryable interface {
 	Find(id, val interface{}) error
 	Retrieve(val interface{}) error
 	RetrieveAll(dest interface{}) error
+	Count() (int64, error)
 }
 
 type SQLable interface {
@@ -43,8 +44,8 @@ type ScopeInformation interface {
 type Mapper interface {
 	Queryable
 	TableInformation
+	Initialize(val ...interface{}) error
 	SaveAll(val interface{}) error
-	//Initialize(val interface{})
 }
 
 type MapperPlus interface {

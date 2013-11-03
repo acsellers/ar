@@ -5,9 +5,17 @@ import (
 	"strconv"
 )
 
+var mappedStructs = make(map[string]*source)
+
 func (c *Connection) CreateMapper(name string, mapee interface{}, Options ...map[string]map[string]interface{}) (Mapper, error) {
 	msource := c.newSource(name, mapee, Options)
 	c.sources[name] = msource
+	if _, found := mappedStructs[msource.FullName]; found {
+		mappedStructs[msource.FullName] = &source{multiMapped: true}
+	} else {
+		mappedStructs[msource.FullName] = msource
+	}
+	c.mappedStructs[msource.FullName] = msource
 
 	return msource, nil
 }

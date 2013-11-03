@@ -111,6 +111,7 @@ type post struct {
 	Permalink string
 	Body      string
 	Views     int
+	*Mixin
 }
 type user struct {
 	Id       int

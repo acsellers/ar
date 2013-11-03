@@ -7,13 +7,17 @@ import (
 )
 
 type source struct {
-	ID      *sourceMapping
-	Name    string
-	SqlName string
-	ColNum  int
-	config  *Config
-	conn    *Connection
-	Fields  []*sourceMapping
+	ID          *sourceMapping
+	Name        string
+	FullName    string
+	SqlName     string
+	ColNum      int
+	hasMixin    bool
+	mixinField  int
+	multiMapped bool
+	config      *Config
+	conn        *Connection
+	Fields      []*sourceMapping
 
 	structName, tableName string
 }
@@ -87,6 +91,7 @@ func (rf *reflectScanner) iface() interface{} {
 
 type structOptions struct {
 	Name       string
+	FullName   string
 	Index      int
 	Kind       reflect.Kind
 	ColumnHint string

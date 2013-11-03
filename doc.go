@@ -352,6 +352,49 @@ a stable release of db. A stable version of db will provide a comprehensive info
 interface for both Scopes and Mappers, but there are more pressing features than it at the
 moment.
 
+Mixin Functionality
+
+If your use case involves significant use of the database, instead of using the
+database as a simple persistence mechanism, you will enjoy the Mixin functionality
+offered by db. When you add the db.Mixin struct as an embedded field to your sturcts,
+you will have the ability to Save, Delete, and UpdateAttribute(s) from struct instances
+directly instead of having to use the mapper objects.
+
+Mixins need to be initialized
+explicitly, this can be done by sending the instances individually, as a slice, or any
+number of individual instances to the mapper for that sturct type's Initialize function.
+You can also initialize individual instances by calling that instances Init function with
+a pointer to the instance. This is only required if you are constructing your instances
+manually and not using the Find/Retrieve/RetrieveAll Scope/Mapper functions. Find, Retrieve,
+and RetrieveAll will all initialize the instances they retrieve if the instances have
+Mixin instances. Instances do not need to be resident in the database for Initialization
+to succeed. Instances also don't need to be initialized to be saved using the
+Mapper.SaveAll function.
+
+  // initalize an instance
+  post := new(Post)
+  post.Init(&post)
+  post.Name = "Hello World"
+  // Save the post to a new record in the corresponding database table
+  post.Save()
+
+  // initialize an instance that is mapped on multiple connections
+  // this is only necessary when a struct is mapped on different connections
+  // Init will return an error in situations when you must use this function
+  post := new(Post)
+  post.InitWithConn(pgConn, &post)
+  post = new(Post)
+  post.InitWithConn(myConn, &post)
+
+  // initalize three instances at once
+  post1, post2, post3 := new(Post), new(Post), new(Post)
+  Posts.Initialize(&post1, &post2, &post3)
+
+  var newPosts []Post
+  ... // code that add instances to newPosts
+  // initialize all instances in newPosts
+  Posts.Initialize(newPosts)
+
 Dialects
 
 A Dialect creates a way for db to talk to a specific RDBMS. The current internal ones are

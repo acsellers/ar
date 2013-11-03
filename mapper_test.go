@@ -11,7 +11,8 @@ func TestPostMapper(t *testing.T) {
 			test.Section("Setup")
 			Posts := conn.m("Post")
 			test.IsNotNil(Posts)
-			test.AreEqual(5, len(Posts.(*source).Fields))
+			test.AreEqual(6, len(Posts.(*source).Fields))
+			test.AreEqual(true, Posts.(*source).hasMixin)
 
 			test.Section("Finding All Posts")
 			var posts []post
@@ -141,6 +142,25 @@ func TestWhere(t *testing.T) {
 	})
 }
 
+func TestCount(t *testing.T) {
+	Within(t, func(test *Test) {
+		for _, c := range availableTestConns() {
+			Posts := c.m("Post")
+			c, e := Posts.Count()
+			test.NoError(e)
+			test.AreEqual(2, c)
+
+			c, e = Posts.EqualTo("id", 1).Count()
+			test.NoError(e)
+			test.AreEqual(1, c)
+
+			c, e = Posts.EqualTo("title", "banana").Count()
+			test.NoError(e)
+			test.AreEqual(0, c)
+
+		}
+	})
+}
 func TestSave(t *testing.T) {
 	Within(t, func(test *Test) {
 		for _, c := range availableTestConns() {
@@ -171,6 +191,52 @@ func TestSave(t *testing.T) {
 			test.NoError(Posts.EqualTo("id", 3).Delete())
 			test.NoError(Posts.RetrieveAll(&posts))
 			test.AreEqual(2, len(posts))
+		}
+	})
+}
+
+func TestMixin(t *testing.T) {
+	Within(t, func(test *Test) {
+		for _, c := range availableTestConns() {
+			Posts := c.m("Post")
+			newpost := post{
+				Title:     "New Post",
+				Permalink: "new_post",
+				Body:      "LOOK AT THIS POAST",
+			}
+			test.IsNil(newpost.Mixin)
+
+			test.NoError(newpost.InitWithConn(c, &newpost))
+			test.IsNotNil(newpost.Mixin)
+
+			newpost.Mixin = nil
+			Posts.Initialize(&newpost)
+			test.IsNotNil(newpost.Mixin)
+
+			c, e := Posts.Count()
+			test.NoError(e)
+			test.AreEqual(2, c)
+
+			test.NoError(newpost.Save())
+			c, e = Posts.Count()
+			test.NoError(e)
+			test.AreEqual(3, c)
+
+			test.NoError(newpost.Delete())
+
+			c, e = Posts.Count()
+			test.NoError(e)
+			test.AreEqual(2, c)
+
+			var firstPost post
+			test.NoError(Posts.Find(1, &firstPost))
+			test.IsNotNil(firstPost.Mixin)
+
+			var posts []post
+			test.NoError(Posts.RetrieveAll(&posts))
+			for _, p := range posts {
+				test.IsNotNil(p.Mixin, "RetrieveAll: Mixin should not be nil")
+			}
 		}
 	})
 }

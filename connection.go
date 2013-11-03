@@ -23,6 +23,7 @@ var TransactionLimitError = errors.New("Transaction Limit Reached")
 type Connection struct {
 	DB             *sql.DB
 	Dialect        Dialect
+	mappedStructs  map[string]*source
 	dbName         string
 	stmtMap        map[string]*sql.Stmt
 	combinedLogs   []Logger
@@ -53,6 +54,7 @@ func NewConnection(dialectName, dbName, connector string) (*Connection, error) {
 
 	conn.dbName = dbName
 	conn.stmtMap = make(map[string]*sql.Stmt)
+	conn.mappedStructs = make(map[string]*source)
 	conn.sources = make(map[string]*source)
 
 	return conn, nil
@@ -105,19 +107,36 @@ func (c *Connection) SetTransactionLimit(max int, blocking bool) {
 	c.txMax = max
 	c.txCount = max - currentTx
 }
-
+func getType(ptr interface{}) reflect.Type {
+	currentType := reflect.TypeOf(ptr)
+	for currentType.Kind() == reflect.Ptr {
+		currentType = currentType.Elem()
+	}
+	return currentType
+}
+func fullNameFor(t reflect.Type) string {
+	return t.PkgPath() + ":" + t.Name()
+}
 func (c *Connection) newSource(name string, ptr interface{}, Options []map[string]map[string]interface{}) *source {
-	structType := c.getType(ptr)
+	structType := getType(ptr)
 
 	s := new(source)
 	s.conn = c
+	s.FullName = fullNameFor(structType)
 	s.Name = name
 	s.SqlName = c.Config.StructToTable(name)
 	s.config = c.Config
 	s.Fields = c.createMappingsFromType(structType)
+	mn := fullNameFor(reflect.TypeOf(Mixin{}))
 	for _, field := range s.Fields {
 		if field.structOptions.Name == c.Config.IdName {
 			s.ID = field
+		}
+		if field.FullName != "" {
+			if field.FullName == mn {
+				s.hasMixin = true
+				s.mixinField = field.Index
+			}
 		}
 	}
 	c.createSqlMappings(s)
@@ -125,15 +144,6 @@ func (c *Connection) newSource(name string, ptr interface{}, Options []map[strin
 	s.structName = structType.Name()
 
 	return s
-}
-
-func (c *Connection) getType(ptr interface{}) reflect.Type {
-	currentType := reflect.TypeOf(ptr)
-	for currentType.Kind() == reflect.Ptr {
-		currentType = currentType.Elem()
-	}
-
-	return currentType
 }
 
 func (c *Connection) createMappingsFromType(structType reflect.Type) []*sourceMapping {
@@ -147,7 +157,13 @@ func (c *Connection) createMappingsFromType(structType reflect.Type) []*sourceMa
 		options.Name = field.Name
 		options.Index = i
 		options.Kind = field.Type.Kind()
-		options.ColumnHint = field.Tag.Get("colName")
+		if options.Kind == reflect.Ptr {
+			rt := field.Type
+			for rt.Kind() == reflect.Ptr {
+				rt = rt.Elem()
+			}
+			options.FullName = fullNameFor(rt)
+		}
 		options.Options = c.parseFieldOptions(field.Tag)
 
 		output = append(output, mapping)

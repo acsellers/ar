@@ -1,7 +1,8 @@
 package db
 
 const (
-	wholeTable = iota
+	other = iota
+	wholeTable
 	singleColumn
 	formula
 	alias
@@ -29,7 +30,7 @@ func (s *selector) String() string {
 		return s.Formula + " AS " + s.Alias
 	case alias:
 		return printString(s.Value) + " AS " + s.Alias
+	default:
+		return s.Formula
 	}
-
-	return ""
 }

@@ -97,11 +97,17 @@ func (mp *mapperPlus) EndingSql() string {
 func (mp *mapperPlus) Delete() error {
 	return mp.identity().Delete()
 }
+
 func (mp *mapperPlus) Retrieve(val interface{}) error {
 	return mp.identity().Retrieve(val)
 }
+
 func (mp *mapperPlus) RetrieveAll(dest interface{}) error {
 	return mp.identity().RetrieveAll(dest)
+}
+
+func (mp *mapperPlus) Count() (int64, error) {
+	return mp.identity().Count()
 }
 
 func (mp *mapperPlus) TableName() string {
@@ -121,7 +127,9 @@ func (mp *mapperPlus) UpdateAttributes(values map[string]interface{}) error {
 func (mp *mapperPlus) UpdateSql(sql string, vals ...interface{}) error {
 	return mp.identity().UpdateSql(sql, vals...)
 }
-
+func (mp *mapperPlus) Initialize(val ...interface{}) error {
+	return mp.source.Initialize(val...)
+}
 func (mp *mapperPlus) SaveAll(val interface{}) error {
 	return mp.source.SaveAll(val)
 }

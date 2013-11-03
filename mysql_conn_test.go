@@ -16,6 +16,7 @@ func TestUserMapping(t *testing.T) {
 			conn.Dialect = newMysql()
 			conn.Config = NewSimpleConfig()
 			conn.sources = make(map[string]*source)
+			conn.mappedStructs = make(map[string]*source)
 			if !verifyTableExists(db, test) {
 				t.Error("Could not locate testing tables")
 			}

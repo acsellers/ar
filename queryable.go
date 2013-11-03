@@ -39,6 +39,12 @@ type queryable struct {
 func (q *queryable) SelectorSql() string {
 	if len(q.selection) == 0 {
 		return strings.Join(q.source.selectColumns(), ", ")
+	} else {
+		selections := make([]string, len(q.selection))
+		for i, selection := range q.selection {
+			selections[i] = selection.String()
+		}
+		return strings.Join(selections, ", ")
 	}
 	output := make([]string, len(q.selection))
 	for i, selection := range q.selection {
@@ -156,10 +162,6 @@ func (q *queryable) Reorder(ordering string) Scope {
 // Find looks for the record with primary key equal to val
 func (q *queryable) Find(id interface{}, val interface{}) error {
 	return q.EqualTo(q.source.ID.Column(), id).Retrieve(val)
-	//	nq := q.Identity().(*queryable)
-	//	nq.conditions = append(q.conditions,
-	//		&equalCondition{fmt.Sprint(q.source.ID.Column()), val})
-	//	return nq.Retrieve(val)
 }
 
 func (q *queryable) Retrieve(val interface{}) error {
@@ -178,7 +180,11 @@ func (q *queryable) Retrieve(val interface{}) error {
 	plan := q.source.mapPlan(rfltr)
 
 	rows.Next()
-	return rows.Scan(plan.Items()...)
+	e := rows.Scan(plan.Items()...)
+	if e == nil {
+		e = q.Initialize(val)
+	}
+	return e
 }
 
 func (q *queryable) RetrieveAll(dest interface{}) error {
@@ -188,9 +194,7 @@ func (q *queryable) RetrieveAll(dest interface{}) error {
 		return err
 	}
 	defer rows.Close()
-	if reflect.TypeOf(dest).Kind() != reflect.Ptr {
-		return errors.New("Must Supply Ptr to Destination")
-	}
+
 	destVal := reflect.ValueOf(dest)
 	destSliceVal := destVal.Elem()
 	tempSliceVal := reflect.Zero(destSliceVal.Type())
@@ -208,7 +212,20 @@ func (q *queryable) RetrieveAll(dest interface{}) error {
 	}
 	destSliceVal.Set(tempSliceVal)
 
-	return nil
+	return q.Initialize(dest)
+}
+
+func (q *queryable) Count() (int64, error) {
+	ct := "COUNT(" + q.source.SqlName + "." + q.source.ID.SqlColumn + ")"
+	qq := q.Identity().(*queryable)
+	qq.selection = []selector{selector{Formula: ct}}
+
+	var count int64
+	query, values := qq.source.conn.Dialect.Query(qq)
+	row := qq.source.runQueryRow(query, values)
+	err := row.Scan(&count)
+
+	return count, err
 }
 
 func (q *queryable) UpdateAttribute(column string, val interface{}) error {
