@@ -263,9 +263,9 @@ func (m *source) setIntID(v reflect.Value, id int64) {
 func (m *source) extractColumnValues(v reflect.Value) map[string]interface{} {
 	output := make(map[string]interface{})
 	for _, field := range m.Fields {
-		if field.columnInfo != nil && field.structOptions != nil {
+		if field.ColumnInfo != nil && field.structOptions != nil {
 			value := v.Field(field.structOptions.Index)
-			output[field.columnInfo.Name] = value.Interface()
+			output[field.ColumnInfo.Name] = value.Interface()
 		}
 	}
 	return output

@@ -95,6 +95,9 @@ func getType(ptr interface{}) reflect.Type {
 	return currentType
 }
 func fullNameFor(t reflect.Type) string {
+	for t.Kind() == reflect.Slice || t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
 	return t.PkgPath() + ":" + t.Name()
 }
 func (c *Connection) newSource(name string, ptr interface{}, Options []map[string]map[string]interface{}) *source {
@@ -137,7 +140,7 @@ func (c *Connection) createMappingsFromType(structType reflect.Type) []*sourceMa
 		options.Name = field.Name
 		options.Index = i
 		options.Kind = field.Type.Kind()
-		if options.Kind == reflect.Ptr {
+		if options.Kind == reflect.Ptr || options.Kind == reflect.Struct || options.Kind == reflect.Slice {
 			rt := field.Type
 			for rt.Kind() == reflect.Ptr {
 				rt = rt.Elem()
@@ -232,7 +235,7 @@ func (c *Connection) createSqlMappings(s *source) {
 
 		for _, field := range s.Fields {
 			if c.Config.FieldToColumn(field.structOptions.Name) == column.Name {
-				field.columnInfo = column
+				field.ColumnInfo = column
 				break
 			}
 		}

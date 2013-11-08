@@ -60,7 +60,7 @@ func verifyTableExists(db *sql.DB, test *Test) bool {
 	return false
 }
 
-func verifyUserTable(test *Test, cols map[string]*columnInfo) {
+func verifyUserTable(test *Test, cols map[string]*ColumnInfo) {
 	test.AreEqual(6, len(cols))
 	if id, ok := cols["id"]; ok {
 		test.AreEqual(id.Name, "id")
@@ -104,7 +104,7 @@ func verifyMapper(test *Test, mapper Mapper) {
 
 	for _, field := range mapper.(*source).Fields[0:5] {
 		col := columnMappings[field.structOptions.Name]
-		test.AreEqual(col[0], field.columnInfo.Name)
-		test.AreEqual(col[1], field.columnInfo.SqlType)
+		test.AreEqual(col[0], field.ColumnInfo.Name)
+		test.AreEqual(col[1], field.ColumnInfo.SqlType)
 	}
 }

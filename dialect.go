@@ -23,7 +23,7 @@ func RegisterDialect(name string, dialect Dialect) {
 }
 
 type Dialect interface {
-	ColumnsInTable(conn *Connection, dbName string, tableName string) map[string]*columnInfo
+	ColumnsInTable(conn *Connection, dbName string, tableName string) map[string]*ColumnInfo
 	CompatibleSqlTypes(f reflect.Type) []string
 	FormatQuery(query string) string
 	Query(scope Scope) (string, []interface{})

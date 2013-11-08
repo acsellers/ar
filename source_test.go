@@ -10,10 +10,10 @@ func TestSourceSelectColumns(t *testing.T) {
 		s := &source{
 			SqlName: "users",
 			Fields: []*sourceMapping{
-				&sourceMapping{&structOptions{}, &columnInfo{SqlColumn: "id"}},
-				&sourceMapping{&structOptions{}, &columnInfo{SqlColumn: "name"}},
-				&sourceMapping{&structOptions{}, &columnInfo{SqlColumn: "email"}},
-				&sourceMapping{&structOptions{}, &columnInfo{SqlColumn: "password"}},
+				&sourceMapping{&structOptions{}, &ColumnInfo{SqlColumn: "id"}},
+				&sourceMapping{&structOptions{}, &ColumnInfo{SqlColumn: "name"}},
+				&sourceMapping{&structOptions{}, &ColumnInfo{SqlColumn: "email"}},
+				&sourceMapping{&structOptions{}, &ColumnInfo{SqlColumn: "password"}},
 			},
 		}
 

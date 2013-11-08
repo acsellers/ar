@@ -125,8 +125,8 @@ func (d base) DeleteSql(queryable *Queryable) (string, []interface{}) {
 	return sql, args
 }
 */
-func (d base) ColumnsInTable(db *sql.DB, dbName string, table string) map[string]*columnInfo {
-	columns := make(map[string]*columnInfo)
+func (d base) ColumnsInTable(db *sql.DB, dbName string, table string) map[string]*ColumnInfo {
+	columns := make(map[string]*ColumnInfo)
 	query := "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
 	query = d.dialect.FormatQuery(query)
 	rows, err := db.Query(query, dbName, table)
@@ -138,7 +138,7 @@ func (d base) ColumnsInTable(db *sql.DB, dbName string, table string) map[string
 		column := ""
 		err := rows.Scan(&column)
 		if err == nil {
-			columns[column] = new(columnInfo)
+			columns[column] = new(ColumnInfo)
 		}
 	}
 	return columns
@@ -151,4 +151,8 @@ func (d base) printArg(v interface{}) string {
 	default:
 		return fmt.Sprint(v)
 	}
+}
+
+func (d base) ExpandGroupBy(t string) string {
+	return t
 }

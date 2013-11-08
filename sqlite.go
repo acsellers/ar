@@ -36,10 +36,10 @@ func (d sqliteDialect) CompatibleSqlTypes(f reflect.Type) []string {
 	return []string{}
 }
 
-func (d sqliteDialect) ColumnsInTable(conn *Connection, dbName string, table string) map[string]*columnInfo {
+func (d sqliteDialect) ColumnsInTable(conn *Connection, dbName string, table string) map[string]*ColumnInfo {
 	query := "PRAGMA table_info(" + table + ")"
 
-	output := make(map[string]*columnInfo)
+	output := make(map[string]*ColumnInfo)
 	rows, err := conn.DB.Query(query)
 	if err != nil {
 		defer rows.Close()
@@ -52,7 +52,7 @@ func (d sqliteDialect) ColumnsInTable(conn *Connection, dbName string, table str
 	var notnull bool
 	var number int
 	for rows.Next() {
-		ci := new(columnInfo)
+		ci := new(ColumnInfo)
 
 		rows.Scan(&number, &name, &sqlType, &notnull, &extra1, &extra2)
 		ci.Number = number

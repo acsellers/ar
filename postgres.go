@@ -46,10 +46,10 @@ func (d postgresDialect) CompatibleSqlTypes(f reflect.Type) []string {
 	return []string{}
 }
 
-func (d postgresDialect) ColumnsInTable(conn *Connection, dbName string, table string) map[string]*columnInfo {
+func (d postgresDialect) ColumnsInTable(conn *Connection, dbName string, table string) map[string]*ColumnInfo {
 	query := `SELECT column_name, data_type, is_nullable, COALESCE(character_maximum_length, -1), ordinal_position
 FROM information_schema.columns WHERE table_catalog = $1 AND table_name = $2`
-	output := make(map[string]*columnInfo)
+	output := make(map[string]*ColumnInfo)
 	rows, err := conn.DB.Query(query, dbName, table)
 	if err != nil {
 		panic(err)
@@ -61,7 +61,7 @@ FROM information_schema.columns WHERE table_catalog = $1 AND table_name = $2`
 	var nullable string
 	var number, length int
 	for rows.Next() {
-		ci := new(columnInfo)
+		ci := new(ColumnInfo)
 
 		err = rows.Scan(&name, &sqlType, &nullable, &length, &number)
 		if err == nil {

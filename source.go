@@ -23,7 +23,7 @@ type source struct {
 
 type sourceMapping struct {
 	*structOptions
-	*columnInfo
+	*ColumnInfo
 }
 
 func (sm *sourceMapping) Column() string {
@@ -39,7 +39,7 @@ type structOptions struct {
 	Options    map[string]interface{}
 }
 
-type columnInfo struct {
+type ColumnInfo struct {
 	Name      string
 	SqlTable  string
 	SqlColumn string

@@ -50,13 +50,13 @@ func (d mysqlDialect) CompatibleSqlTypes(f reflect.Type) []string {
 	panic("invalid sql type")
 }
 
-func (d mysqlDialect) ColumnsInTable(conn *Connection, dbName string, table string) map[string]*columnInfo {
+func (d mysqlDialect) ColumnsInTable(conn *Connection, dbName string, table string) map[string]*ColumnInfo {
 	query := "SHOW COLUMNS FROM " + table
 	if dbName != "" {
 		query = "SHOW COLUMNS FROM " + table + " IN " + dbName
 	}
 
-	output := make(map[string]*columnInfo)
+	output := make(map[string]*ColumnInfo)
 	rows, err := conn.DB.Query(query)
 	if err != nil {
 		defer rows.Close()
@@ -69,7 +69,7 @@ func (d mysqlDialect) ColumnsInTable(conn *Connection, dbName string, table stri
 	var notnull bool
 	var number int
 	for rows.Next() {
-		ci := new(columnInfo)
+		ci := new(ColumnInfo)
 
 		rows.Scan(&name, &sqlType, &notnull, &key, &def, &extra)
 		ci.Name = name

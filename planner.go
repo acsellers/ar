@@ -14,7 +14,7 @@ func (s *source) mapPlan(v reflector) *planner {
 	p := &planner{[]*reflectScanner{}}
 
 	for _, col := range s.Fields {
-		if col.columnInfo != nil && col.structOptions != nil {
+		if col.ColumnInfo != nil && col.structOptions != nil {
 			p.scanners = append(
 				p.scanners,
 				&reflectScanner{parent: v, column: col},
@@ -28,10 +28,10 @@ func (s *source) mapPlan(v reflector) *planner {
 func (s *source) selectColumns() []string {
 	output := []string{}
 	for _, col := range s.Fields {
-		if col.columnInfo != nil && col.structOptions != nil {
+		if col.ColumnInfo != nil && col.structOptions != nil {
 			output = append(
 				output,
-				fmt.Sprintf("%s.%s", s.SqlName, col.columnInfo.SqlColumn),
+				fmt.Sprintf("%s.%s", s.SqlName, col.ColumnInfo.SqlColumn),
 			)
 		}
 	}
