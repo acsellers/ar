@@ -17,6 +17,7 @@ func TestUserMapping(t *testing.T) {
 			conn.Config = NewSimpleConfig()
 			conn.sources = make(map[string]*source)
 			conn.mappedStructs = make(map[string]*source)
+			conn.mappableStructs = make(map[string][]*source)
 			if !verifyTableExists(db, test) {
 				t.Error("Could not locate testing tables")
 			}
@@ -91,7 +92,7 @@ func verifyUserTable(test *Test, cols map[string]*columnInfo) {
 
 func verifyMapper(test *Test, mapper Mapper) {
 	test.AreEqual(mapper.(*source).Name, "User")
-	test.AreEqual(len(mapper.(*source).Fields), 5)
+	test.AreEqual(len(mapper.(*source).Fields), 8)
 	test.AreEqual(mapper.(*source).ColNum, 6)
 	columnMappings := map[string][]string{
 		"Id":       []string{"id", "int"},
@@ -101,7 +102,7 @@ func verifyMapper(test *Test, mapper Mapper) {
 		"Story":    []string{"story", "text"},
 	}
 
-	for _, field := range mapper.(*source).Fields {
+	for _, field := range mapper.(*source).Fields[0:5] {
 		col := columnMappings[field.structOptions.Name]
 		test.AreEqual(col[0], field.columnInfo.Name)
 		test.AreEqual(col[1], field.columnInfo.SqlType)

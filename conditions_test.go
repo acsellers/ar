@@ -170,3 +170,17 @@ func TestVaryCondition(t *testing.T) {
 		test.AreEqual(vc.String(), "test_tbl.test_col <> 'asdf'")
 	})
 }
+
+func TestHolderFor(t *testing.T) {
+	Within(t, func(test *Test) {
+		test.AreEqual("?", holderFor("asdf"))
+		test.AreEqual("NOW()", holderFor(Formula("NOW()")))
+	})
+}
+
+func TestValuesFor(t *testing.T) {
+	Within(t, func(test *Test) {
+		test.AreEqual([]interface{}{5}, valuesFor(5))
+		test.AreEqual([]interface{}{5}, valuesFor(Formula("NOW(?)", 5)))
+	})
+}

@@ -11,7 +11,7 @@ func TestPostMapper(t *testing.T) {
 			test.Section("Setup")
 			Posts := conn.m("Post")
 			test.IsNotNil(Posts)
-			test.AreEqual(7, len(Posts.(*source).Fields))
+			test.AreEqual(8, len(Posts.(*source).Fields))
 			test.AreEqual(true, Posts.(*source).hasMixin)
 
 			test.Section("Finding All Posts")

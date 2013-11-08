@@ -2,7 +2,6 @@ package db
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"strings"
 )
@@ -25,11 +24,8 @@ func (q *queryable) Retrieve(val interface{}) error {
 	rows.Next()
 	e := rows.Scan(plan.Items()...)
 	if e == nil {
-		plan.Finalize()
 		e = q.Initialize(val, plan)
-	} else {
-		fmt.Println(e)
-		fmt.Println(plan.Items()[5], plan.scanners[5].i, plan.scanners[5].column.Nullable)
+		plan.Finalize(val)
 	}
 	return e
 }
@@ -54,12 +50,13 @@ func (q *queryable) RetrieveAll(dest interface{}) error {
 		if err != nil {
 			return err
 		}
-		plan.Finalize()
+		q.Initialize(vn.Interface())
+		plan.Finalize(vn.Interface())
 		tempSliceVal = reflect.Append(tempSliceVal, vn.Elem())
 		rfltr.item = reflect.New(element)
 	}
 	destSliceVal.Set(tempSliceVal)
-	return q.Initialize(dest)
+	return nil
 }
 
 func (q *queryable) Pluck(column string, val interface{}) error {

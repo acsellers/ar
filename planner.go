@@ -47,12 +47,20 @@ func (p *planner) Items() []interface{} {
 	return output
 }
 
-func (p *planner) Finalize() {
+type mixed interface {
+	SetNull(string)
+}
+
+func (p *planner) Finalize(val interface{}) {
+	mx, ok := val.(mixed)
 	for _, s := range p.scanners {
 		if s.column.Nullable {
-			s.finalize()
+			if s.finalize() && ok {
+				mx.SetNull(s.column.SqlColumn)
+			}
 		}
 	}
+
 }
 
 type reflectScanner struct {
@@ -86,31 +94,32 @@ func (rf *reflectScanner) iface() interface{} {
 	}
 }
 
-func (rf *reflectScanner) finalize() {
+func (rf *reflectScanner) finalize() bool {
 	switch rf.column.Kind {
 	case reflect.String:
 		if rf.s.Valid {
 			rf.parent.item.Elem().Field(rf.column.Index).SetString(rf.s.String)
 		} else {
-			rf.isnull = true
+			return true
 		}
 	case reflect.Bool:
 		if rf.b.Valid {
 			rf.parent.item.Elem().Field(rf.column.Index).SetBool(rf.b.Bool)
 		} else {
-			rf.isnull = true
+			return true
 		}
 	case reflect.Float32, reflect.Float64:
 		if rf.f.Valid {
 			rf.parent.item.Elem().Field(rf.column.Index).SetFloat(rf.f.Float64)
 		} else {
-			rf.isnull = true
+			return true
 		}
 	default:
 		if rf.i.Valid {
 			rf.parent.item.Elem().Field(rf.column.Index).SetInt(rf.i.Int64)
 		} else {
-			rf.isnull = true
+			return true
 		}
 	}
+	return false
 }

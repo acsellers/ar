@@ -7,6 +7,55 @@ import (
 	"strings"
 )
 
+func holderFor(v interface{}) string {
+	switch va := v.(type) {
+	case SqlFormula:
+		return va.Fragment()
+	default:
+		return "?"
+	}
+}
+
+func valuesFor(v ...interface{}) []interface{} {
+	out := []interface{}{}
+	for _, arg := range v {
+		switch at := arg.(type) {
+		case SqlFormula:
+			fv := at.Values()
+			if len(fv) > 0 {
+				out = append(out, fv...)
+			}
+		default:
+			out = append(out, arg)
+		}
+	}
+	return out
+}
+func Formula(f string, values ...interface{}) SqlFormula {
+	return sqlFormula{f, values}
+}
+
+type sqlFormula struct {
+	fragment string
+	vals     []interface{}
+}
+
+func (sf sqlFormula) Fragment() string {
+	return sf.fragment
+}
+func (sf sqlFormula) Values() []interface{} {
+	return sf.vals
+}
+func (sf sqlFormula) String() string {
+	return withVars(sf.fragment, sf.vals)
+}
+
+type SqlFormula interface {
+	Fragment() string
+	Values() []interface{}
+	String() string
+}
+
 type condition interface {
 	String() string
 	Fragment() string
@@ -81,10 +130,10 @@ func (bc *betweenCondition) String() string {
 	return withVars(bc.Fragment(), bc.Values())
 }
 func (bc *betweenCondition) Fragment() string {
-	return bc.column + " BETWEEN ? AND ?"
+	return bc.column + " BETWEEN " + holderFor(bc.lower) + " AND " + holderFor(bc.upper)
 }
 func (bc *betweenCondition) Values() []interface{} {
-	return []interface{}{bc.lower, bc.upper}
+	return valuesFor(bc.lower, bc.upper)
 }
 
 type equalCondition struct {
@@ -99,10 +148,10 @@ func (ec *equalCondition) Fragment() string {
 	if isNil(ec.val) {
 		return ec.column + "IS NULL"
 	}
-	return ec.column + " = ?"
+	return ec.column + " = " + holderFor(ec.val)
 }
 func (ec *equalCondition) Values() []interface{} {
-	return []interface{}{ec.val}
+	return valuesFor(ec.val)
 }
 
 type whereCondition struct {
@@ -198,7 +247,7 @@ func (vc *varyCondition) Values() []interface{} {
 	if isNil(vc.val) {
 		return []interface{}{}
 	}
-	return []interface{}{vc.val}
+	return valuesFor(vc.val)
 }
 func withVars(sqlFragment string, vals []interface{}) string {
 	input := strings.Split(sqlFragment, "?")

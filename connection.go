@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"sync"
 )
 
 // Each Connection can have multiple loggers, and each logger
@@ -20,21 +19,20 @@ const (
 
 var TransactionLimitError = errors.New("Transaction Limit Reached")
 
+var mappedStructs = make(map[string]*source)
+
 type Connection struct {
-	DB             *sql.DB
-	Dialect        Dialect
-	mappedStructs  map[string]*source
-	dbName         string
-	stmtMap        map[string]*sql.Stmt
-	combinedLogs   []Logger
-	errorLogs      []Logger
-	queryLogs      []Logger
-	txBlock        bool
-	txCount, txMax int
-	txMutex        sync.Mutex
-	txWait         []chan int
-	sources        map[string]*source
-	Config         *Config
+	DB              *sql.DB
+	Dialect         Dialect
+	mappedStructs   map[string]*source
+	mappableStructs map[string][]*source
+	dbName          string
+	stmtMap         map[string]*sql.Stmt
+	combinedLogs    []Logger
+	errorLogs       []Logger
+	queryLogs       []Logger
+	sources         map[string]*source
+	Config          *Config
 }
 
 func NewConnection(dialectName, dbName, connector string) (*Connection, error) {
@@ -55,6 +53,7 @@ func NewConnection(dialectName, dbName, connector string) (*Connection, error) {
 	conn.dbName = dbName
 	conn.stmtMap = make(map[string]*sql.Stmt)
 	conn.mappedStructs = make(map[string]*source)
+	conn.mappableStructs = make(map[string][]*source)
 	conn.sources = make(map[string]*source)
 
 	return conn, nil
@@ -88,25 +87,6 @@ func (c *Connection) SetLogger(logger Logger, logType int) {
 	}
 }
 
-// Sets the limit of concurrent transactions, blocking determines
-// whether Connection.StartTransaction will block on waiting
-// or return a TransactionLimitError. blocking is set to false
-// by default for a new Connection. Setting max to 0 will not
-// disable Transactions. To disable Transactions, it would be
-// suggested that you set the max to 1, call StartTransaction, then
-// call Commit on the sql.Tx manually. So long as Commit or
-// Rollback is not called on the ar.Tx object, all future
-// StartTransaction calls will not succeed.
-func (c *Connection) SetTransactionLimit(max int, blocking bool) {
-	c.txBlock = blocking
-	currentTx := c.txMax - c.txCount
-	if currentTx < 0 {
-		currentTx = -currentTx
-	}
-
-	c.txMax = max
-	c.txCount = max - currentTx
-}
 func getType(ptr interface{}) reflect.Type {
 	currentType := reflect.TypeOf(ptr)
 	for currentType.Kind() == reflect.Ptr {

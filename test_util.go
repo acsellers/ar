@@ -115,6 +115,7 @@ type post struct {
 	Body      string
 	Views     int
 	UserId    int
+	User      user
 	*Mixin
 }
 type user struct {
@@ -123,6 +124,9 @@ type user struct {
 	Email    string
 	Password string
 	Story    string
+	Post     []post
+	Posts    Scope
+	*Mixin
 }
 
 var mysqlCreateScript = []string{

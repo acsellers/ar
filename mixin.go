@@ -57,11 +57,15 @@ func (m *Mixin) UpdateAttributes(values map[string]interface{}) error {
 	return m.selfScope().UpdateAttributes(values)
 }
 
-func (m *Mixin) Valid(column string) bool {
+func (m *Mixin) IsNull(column string) bool {
 	for _, n := range m.nulls {
 		if column == n {
-			return false
+			return true
 		}
 	}
-	return true
+	return false
+}
+
+func (m *Mixin) SetNull(column string) {
+	m.nulls = append(m.nulls, column)
 }

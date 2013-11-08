@@ -409,6 +409,22 @@ Mapper.SaveAll function.
   // initialize all instances in newPosts
   Posts.Initialize(newPosts)
 
+SQL Sundries
+
+If you need to use functions to be evaluated by the sql server as part of conditions,
+you can pass a formula created with the Formula function. Formulas can have their own
+parameters, which you should specify using ?'s to denote where the values should appear.
+Where scopings do not respect Formula's at the moment, but they will in the future.
+
+  // Find all appointments with a length of less than 5 minutes
+  var tooShort []Appointment
+  shortFormula := db.Formula("TIMESTAMPADD(MINUTE, 5, appointments.begin_date_time)")
+  Appointments.Cond("end_date_time", db.LT, shortFormula).RetrieveAll(&tooShort)
+
+  // Where calls do not need Formula instances to use functions
+  Appointments.Where("end_date_time < TIMESTAMPADD(MINUTE, 5, appointments.begin_date_time)")
+
+
 Dialects
 
 A Dialect creates a way for db to talk to a specific RDBMS. The current internal ones are
