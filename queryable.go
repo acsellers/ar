@@ -1,9 +1,9 @@
 package db
 
-import "errors"
-import "fmt"
-import "reflect"
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // Conditions for Cond calls
 const (
@@ -24,6 +24,8 @@ const (
 	GT
 	GTE
 )
+
+type Attributes map[string]interface{}
 
 type queryable struct {
 	*source
@@ -164,57 +166,6 @@ func (q *queryable) Find(id interface{}, val interface{}) error {
 	return q.EqualTo(q.source.ID.Column(), id).Retrieve(val)
 }
 
-func (q *queryable) Retrieve(val interface{}) error {
-	query, values := q.source.conn.Dialect.Query(q)
-	rows, err := q.source.runQuery(query, values)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	if reflect.TypeOf(val).Kind() != reflect.Ptr {
-		return errors.New("Must Supply Ptr to Destination")
-	}
-	value := reflect.ValueOf(val)
-	rfltr := reflector{value}
-	plan := q.source.mapPlan(rfltr)
-
-	rows.Next()
-	e := rows.Scan(plan.Items()...)
-	if e == nil {
-		e = q.Initialize(val)
-	}
-	return e
-}
-
-func (q *queryable) RetrieveAll(dest interface{}) error {
-	query, values := q.source.conn.Dialect.Query(q)
-	rows, err := q.source.runQuery(query, values)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	destVal := reflect.ValueOf(dest)
-	destSliceVal := destVal.Elem()
-	tempSliceVal := reflect.Zero(destSliceVal.Type())
-	element := destSliceVal.Type().Elem()
-	vn := reflect.New(element)
-	rfltr := reflector{vn}
-	plan := q.source.mapPlan(rfltr)
-	for rows.Next() {
-		err = rows.Scan(plan.Items()...)
-		if err != nil {
-			return err
-		}
-		tempSliceVal = reflect.Append(tempSliceVal, vn.Elem())
-		rfltr.item = reflect.New(element)
-	}
-	destSliceVal.Set(tempSliceVal)
-
-	return q.Initialize(dest)
-}
-
 func (q *queryable) Count() (int64, error) {
 	ct := "COUNT(" + q.source.SqlName + "." + q.source.ID.SqlColumn + ")"
 	qq := q.Identity().(*queryable)
@@ -228,44 +179,13 @@ func (q *queryable) Count() (int64, error) {
 	return count, err
 }
 
-func (q *queryable) Pluck(column string, val interface{}) error {
-	if strings.Index(column, ".") == -1 {
-		column = q.source.SqlName + "." + column
-	}
-	qq := q.Identity().(*queryable)
-	qq.selection = []selector{selector{Formula: column}}
-
-	query, values := qq.source.conn.Dialect.Query(qq)
-	rows, err := qq.source.runQuery(query, values)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
-
-	destVal := reflect.ValueOf(val)
-	destSliceVal := destVal.Elem()
-	tempSliceVal := reflect.Zero(destSliceVal.Type())
-	element := destSliceVal.Type().Elem()
-	vn := reflect.New(element)
-	for rows.Next() {
-		err = rows.Scan(vn.Interface())
-		if err != nil {
-			return err
-		}
-		tempSliceVal = reflect.Append(tempSliceVal, vn.Elem())
-	}
-	destSliceVal.Set(tempSliceVal)
-
-	return err
-}
-
 func (q *queryable) UpdateAttribute(column string, val interface{}) error {
 	query, vals := q.source.conn.Dialect.Update(q, map[string]interface{}{column: val})
 	_, err := q.source.runExec(query, vals)
 
 	return err
 }
-func (q *queryable) UpdateAttributes(values map[string]interface{}) error {
+func (q *queryable) UpdateAttributes(values Attributes) error {
 	query, vals := q.source.conn.Dialect.Update(q, values)
 	_, err := q.source.runExec(query, vals)
 	return err

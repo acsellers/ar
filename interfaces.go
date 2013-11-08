@@ -23,7 +23,7 @@ type Queryable interface {
 
 	Delete() error
 	UpdateAttribute(column string, val interface{}) error
-	UpdateAttributes(values map[string]interface{}) error
+	UpdateAttributes(values Attributes) error
 	UpdateSql(sql string, vals ...interface{}) error
 
 	Pluck(column string, values interface{}) error

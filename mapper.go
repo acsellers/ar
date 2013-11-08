@@ -71,7 +71,7 @@ func (m *source) UpdateAttribute(column string, val interface{}) error {
 	return m.Identity().UpdateAttribute(column, val)
 }
 
-func (m *source) UpdateAttributes(values map[string]interface{}) error {
+func (m *source) UpdateAttributes(values Attributes) error {
 	return m.Identity().UpdateAttributes(values)
 }
 

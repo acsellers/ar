@@ -7,6 +7,7 @@ import (
 
 type Mixin struct {
 	instance interface{}
+	nulls    []string
 	model    *source
 }
 
@@ -54,4 +55,13 @@ func (m *Mixin) UpdateAttribute(attr string, value interface{}) error {
 
 func (m *Mixin) UpdateAttributes(values map[string]interface{}) error {
 	return m.selfScope().UpdateAttributes(values)
+}
+
+func (m *Mixin) Valid(column string) bool {
+	for _, n := range m.nulls {
+		if column == n {
+			return false
+		}
+	}
+	return true
 }

@@ -124,7 +124,7 @@ func (mp *mapperPlus) PrimaryKeyColumn() string {
 func (mp *mapperPlus) UpdateAttribute(column string, val interface{}) error {
 	return mp.identity().UpdateAttribute(column, val)
 }
-func (mp *mapperPlus) UpdateAttributes(values map[string]interface{}) error {
+func (mp *mapperPlus) UpdateAttributes(values Attributes) error {
 	return mp.identity().UpdateAttributes(values)
 }
 func (mp *mapperPlus) UpdateSql(sql string, vals ...interface{}) error {

@@ -49,6 +49,7 @@ func setupMysqlTestConn() *Connection {
 	}
 	conn.Config = NewSimpleConfig()
 	conn.CreateMapper("Post", &post{})
+	conn.CreateMapper("User", &user{})
 
 	return conn
 }
@@ -71,12 +72,13 @@ func setupPostgresTestConn() *Connection {
 	}
 	conn.Config = NewSimpleConfig()
 	conn.CreateMapper("Post", &post{})
+	conn.CreateMapper("User", &user{})
 
 	return conn
 }
 
 func setupSqliteTestConn() *Connection {
-	conn, err := NewConnection("sqlite3", "main", ":memory:")
+	conn, err := NewConnection("sqlite3", "main", "testing.db")
 	if err != nil {
 		panic(err)
 	}
@@ -89,6 +91,7 @@ func setupSqliteTestConn() *Connection {
 
 	conn.Config = NewSimpleConfig()
 	conn.CreateMapper("Post", &post{})
+	conn.CreateMapper("User", &user{})
 
 	return conn
 }
@@ -111,6 +114,7 @@ type post struct {
 	Permalink string
 	Body      string
 	Views     int
+	UserId    int
 	*Mixin
 }
 type user struct {
@@ -129,15 +133,15 @@ var mysqlCreateScript = []string{
 		"	`permalink` VarChar( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL, \n" +
 		"	`body` Text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL, \n" +
 		"	`views` Int( 255 ) UNSIGNED NOT NULL DEFAULT '1', \n" +
-		"	`author` Int( 255 ) UNSIGNED,\n" +
+		"	`userid` Int( 255 ) UNSIGNED,\n" +
 		"	 PRIMARY KEY ( `id` )\n" +
 		" )\n" +
 		"CHARACTER SET = utf8\n" +
 		"COLLATE = utf8_general_ci\n" +
 		"ENGINE = InnoDB\n" +
 		"AUTO_INCREMENT = 3;\n",
-	"INSERT INTO `post`(`id`,`title`,`permalink`,`body`,`views`,`author`) VALUES ( '1', 'First Post', 'first_post', 'This is the first post', '1', '0' );\n",
-	"INSERT INTO `post`(`id`,`title`,`permalink`,`body`,`views`,`author`) VALUES ( '2', 'Second Post', 'second_post', 'Hey must be committed to this, I wrote a second post', '1', '0' );;\n",
+	"INSERT INTO `post`(`id`,`title`,`permalink`,`body`,`views`,`userid`) VALUES ( '1', 'First Post', 'first_post', 'This is the first post', '1', '1' );\n",
+	"INSERT INTO `post`(`id`,`title`,`permalink`,`body`,`views`) VALUES ( '2', 'Second Post', 'second_post', 'Hey must be committed to this, I wrote a second post', '1');;\n",
 	"CREATE UNIQUE INDEX `unique_id` USING BTREE ON `post`( `id` );\n",
 	"CREATE UNIQUE INDEX `unique_permalink` USING BTREE ON `post`( `permalink` );\n",
 	"DROP TABLE IF EXISTS `user` CASCADE;\n",
@@ -168,14 +172,14 @@ var sqliteCreateScript = []string{
     "permalink" Text NOT NULL,
     "body" Text NOT NULL,
     "views" Integer NOT NULL DEFAULT 1,
-    "author" Integer,
+    "userid" Integer,
   CONSTRAINT "unique_id" UNIQUE ( "id" ),
   CONSTRAINT "unique_permalink" UNIQUE ( "permalink" ) );`,
 
 	`CREATE INDEX "index_id" ON "post"( "id" );`,
 
-	`INSERT INTO "post"("id","title","permalink","body","views","author") VALUES ( 1,'First Post','first_post','This is the first post',1,0 );`,
-	`INSERT INTO "post"("id","title","permalink","body","views","author") VALUES ( 2,'Second Post','second_post','Hey must be committed to this, I wrote a second post',1,0 );`,
+	`INSERT INTO "post"("id","title","permalink","body","views","userid") VALUES ( 1,'First Post','first_post','This is the first post',1,1 );`,
+	`INSERT INTO "post"("id","title","permalink","body","views","userid") VALUES ( 2,'Second Post','second_post','Hey must be committed to this, I wrote a second post',1,NULL);`,
 
 	`DROP TABLE IF EXISTS "user";`,
 
@@ -201,12 +205,13 @@ var postgresCreateScript = []string{
     permalink character varying(255) NOT NULL,
     body text,
     views integer NOT NULL DEFAULT 1,
+    userid integer,
     CONSTRAINT pk_post PRIMARY KEY (id)
   ) WITH (
     OIDS=FALSE
   );`,
 	`ALTER TABLE post OWNER TO postgres;`,
-	"INSERT INTO post (title,permalink,body,views) VALUES ('First Post', 'first_post', 'This is the first post', 1);",
+	"INSERT INTO post (title,permalink,body,views,userid) VALUES ('First Post', 'first_post', 'This is the first post', 1,1);",
 	"INSERT INTO post (title,permalink,body,views) VALUES ('Second Post', 'second_post', 'Hey must be committed to this, I wrote a second post', 1);",
 	`DROP TABLE IF EXISTS "user"`,
 	`CREATE TABLE "user" (

@@ -49,17 +49,17 @@ func (d sqliteDialect) ColumnsInTable(conn *Connection, dbName string, table str
 
 	var name, sqlType string
 	var extra1, extra2 string
-	var nullable bool
+	var notnull bool
 	var number int
 	for rows.Next() {
 		ci := new(columnInfo)
 
-		rows.Scan(&number, &name, &sqlType, &nullable, &extra1, &extra2)
+		rows.Scan(&number, &name, &sqlType, &notnull, &extra1, &extra2)
 		ci.Number = number
 		ci.Name = name
 		ci.SqlTable = table
 		ci.SqlColumn = name
-		ci.Nullable = nullable
+		ci.Nullable = !notnull
 		ci.SqlType = sqlType
 		ci.Length = -1
 		output[name] = ci

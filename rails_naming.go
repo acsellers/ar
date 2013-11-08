@@ -8,9 +8,10 @@ import (
 func NewRailsConfig() *Config {
 	c := new(Config)
 	c.StructToTable = pluralizeStruct
-	c.TableToStruct = singularizeTable
 	c.FieldToColumn = inflections.Underscore
-	c.ColumnToField = inflections.Camelize
+	c.ForeignKeyName = func(fn, sn string) string {
+		return strings.ToLower(fn) + "_id"
+	}
 	c.IdName = "Id"
 	c.CreatedColumn = "CreatedAt"
 	c.UpdatedColumn = "UpdatedAt"

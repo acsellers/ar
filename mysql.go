@@ -66,16 +66,16 @@ func (d mysqlDialect) ColumnsInTable(conn *Connection, dbName string, table stri
 
 	var name, sqlType, key, extra string
 	var def string
-	var nullable bool
+	var notnull bool
 	var number int
 	for rows.Next() {
 		ci := new(columnInfo)
 
-		rows.Scan(&name, &sqlType, &nullable, &key, &def, &extra)
+		rows.Scan(&name, &sqlType, &notnull, &key, &def, &extra)
 		ci.Name = name
 		ci.SqlTable = table
 		ci.SqlColumn = name
-		ci.Nullable = nullable
+		ci.Nullable = !notnull
 		ci.SqlType = d.sqlTypeFrom(sqlType)
 		ci.Length = d.sqlLengthFrom(sqlType)
 		ci.Number = number

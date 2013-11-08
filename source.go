@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"reflect"
 )
 
@@ -29,64 +28,6 @@ type sourceMapping struct {
 
 func (sm *sourceMapping) Column() string {
 	return sm.SqlTable + "." + sm.SqlColumn
-}
-
-type planner struct {
-	scanners []interfaceable
-}
-
-func (s *source) mapPlan(v reflector) *planner {
-	p := &planner{[]interfaceable{}}
-
-	for _, col := range s.Fields {
-		if col.columnInfo != nil && col.structOptions != nil {
-			p.scanners = append(
-				p.scanners,
-				&reflectScanner{parent: v, index: col.columnInfo.Number},
-			)
-		}
-	}
-
-	return p
-}
-
-func (s *source) selectColumns() []string {
-	output := []string{}
-	for _, col := range s.Fields {
-		if col.columnInfo != nil && col.structOptions != nil {
-			output = append(
-				output,
-				fmt.Sprintf("%s.%s", s.SqlName, col.columnInfo.SqlColumn),
-			)
-		}
-	}
-	return output
-}
-
-func (p *planner) Items() []interface{} {
-	output := make([]interface{}, len(p.scanners))
-	for i, _ := range output {
-		output[i] = p.scanners[i].iface()
-	}
-
-	return output
-}
-
-type reflectScanner struct {
-	parent reflector
-	index  int
-}
-
-type interfaceable interface {
-	iface() interface{}
-}
-
-type reflector struct {
-	item reflect.Value
-}
-
-func (rf *reflectScanner) iface() interface{} {
-	return rf.parent.item.Elem().Field(rf.index).Addr().Interface()
 }
 
 type structOptions struct {
