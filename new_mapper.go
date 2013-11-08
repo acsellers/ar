@@ -5,8 +5,6 @@ import (
 	"strconv"
 )
 
-var mappedStructs = make(map[string]*source)
-
 func (c *Connection) CreateMapper(name string, mapee interface{}, Options ...map[string]map[string]interface{}) (Mapper, error) {
 	msource := c.newSource(name, mapee, Options)
 	c.sources[name] = msource
