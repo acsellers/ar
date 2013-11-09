@@ -11,12 +11,12 @@ import (
 var typeRegex = regexp.MustCompile("^([a-zA-Z0-9]+)(\\([0-9]+\\))?(.*)")
 
 type mysqlDialect struct {
-	base
+	Base
 }
 
 func newMysql() Dialect {
 	d := new(mysqlDialect)
-	d.base.dialect = d
+	d.Base.Dialect = d
 	return d
 }
 

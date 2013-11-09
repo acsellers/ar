@@ -9,12 +9,12 @@ import (
 )
 
 type postgresDialect struct {
-	base
+	Base
 }
 
 func newPostgres() Dialect {
 	d := new(postgresDialect)
-	d.base.dialect = d
+	d.Base.Dialect = d
 	return d
 }
 
@@ -113,5 +113,5 @@ func (d postgresDialect) Create(mapper Mapper, values map[string]interface{}) (s
 	output += strings.Join(cols, ",") + ") VALUES (" + strings.Join(holders, ",") + ")"
 	output += " RETURNING " + mapper.PrimaryKeyColumn()
 
-	return d.dialect.FormatQuery(output), sqlVals
+	return d.Dialect.FormatQuery(output), sqlVals
 }

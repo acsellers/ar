@@ -7,12 +7,12 @@ import (
 )
 
 type sqliteDialect struct {
-	base
+	Base
 }
 
 func newSqlite() Dialect {
 	d := new(sqliteDialect)
-	d.base.dialect = d
+	d.Base.Dialect = d
 	return d
 }
 
@@ -69,6 +69,6 @@ func (d sqliteDialect) ColumnsInTable(conn *Connection, dbName string, table str
 }
 
 func (d sqliteDialect) Query(scope Scope) (string, []interface{}) {
-	out, args := d.base.Query(scope)
+	out, args := d.Base.Query(scope)
 	return out, args
 }
