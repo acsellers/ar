@@ -12,7 +12,7 @@ type Config struct {
 
 	// A function to give a default name for a databse column based
 	// on a struct field
-	FieldToColumn func(fieldName string) string
+	FieldToColumn func(structName, fieldName string) string
 
 	// A function that gives a guess as to what the default name
 	// would be for a foreign key field based on the field name from

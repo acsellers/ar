@@ -8,7 +8,9 @@ import (
 func NewRailsConfig() *Config {
 	c := new(Config)
 	c.StructToTable = pluralizeStruct
-	c.FieldToColumn = inflections.Underscore
+	c.FieldToColumn = func(s, f string) string {
+		return inflections.Underscore(f)
+	}
 	c.ForeignKeyName = func(fn, sn string) string {
 		return strings.ToLower(fn) + "_id"
 	}

@@ -7,7 +7,9 @@ import (
 func NewSimpleConfig() *Config {
 	c := new(Config)
 	c.StructToTable = strings.ToLower
-	c.FieldToColumn = strings.ToLower
+	c.FieldToColumn = func(s, f string) string {
+		return strings.ToLower(f)
+	}
 	c.ForeignKeyName = func(fn, sn string) string {
 		return strings.ToLower(fn) + "id"
 	}

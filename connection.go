@@ -232,7 +232,7 @@ func (c *Connection) createSqlMappings(s *source) {
 		}
 
 		for _, field := range s.Fields {
-			if c.Config.FieldToColumn(field.structOptions.Name) == column.Name {
+			if c.Config.FieldToColumn(s.Name, field.structOptions.Name) == column.Name {
 				field.ColumnInfo = column
 				break
 			}
