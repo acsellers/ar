@@ -25,6 +25,17 @@ const (
 	GTE
 )
 
+/*
+This is used to pass multiple columns and values to UpdateAttributes
+functions
+
+  // Update multiple attributes
+  somePostsScope.UpdateAttributes(db.Attributes{
+    "created_at": time.Now(),
+    "building": true,
+    "state": "build",
+  })
+*/
 type Attributes map[string]interface{}
 
 type queryable struct {

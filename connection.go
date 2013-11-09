@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -16,8 +15,6 @@ const (
 	LOG_QUERY
 	LOG_ERROR
 )
-
-var TransactionLimitError = errors.New("Transaction Limit Reached")
 
 var mappedStructs = make(map[string]*source)
 

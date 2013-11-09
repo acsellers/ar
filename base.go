@@ -1,7 +1,6 @@
 package db
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -36,27 +35,20 @@ type Base struct {
 	Dialect Dialect
 }
 
+// The Base FormatQuery will not do anything, just returns the input string
+// This works for databases that parameterize with ?, but postgres and similar
+// database will need to implement a transformation for this function
 func (d Base) FormatQuery(query string) string {
 	return query
 }
 
+// The Base CreateExec return value is true, so INSERT statements will
+// be run by sql.Exec calls.
 func (d Base) CreateExec() bool {
 	return true
 }
 
-func (d Base) Quote(s string) string {
-	segs := strings.Split(s, ".")
-	buf := new(bytes.Buffer)
-	buf.WriteByte('`')
-	buf.WriteString(segs[0])
-	for i := 1; i < len(segs); i++ {
-		buf.WriteString("`.`")
-		buf.WriteString(segs[i])
-	}
-	buf.WriteByte('`')
-	return buf.String()
-}
-
+// Create a basic SELECT query using ScopeInformation functions
 func (d Base) Query(scope Scope) (string, []interface{}) {
 	output := "SELECT " + scope.SelectorSql() + " FROM " + scope.TableName()
 	output += scope.JoinSql()
@@ -69,6 +61,9 @@ func (d Base) Query(scope Scope) (string, []interface{}) {
 	return d.Dialect.FormatQuery(output), values
 }
 
+// The Base Create function uses the syntax of INSERT INTO `table` (col...) VALUES (...)
+// if this syntax will not work or you need a RETURNING predicate to get the id of
+// the inserted records, you should override this
 func (d Base) Create(mapper Mapper, values map[string]interface{}) (string, []interface{}) {
 	output := "INSERT INTO " + mapper.TableName() + " ("
 	sqlVals := make([]interface{}, len(values))
@@ -85,6 +80,7 @@ func (d Base) Create(mapper Mapper, values map[string]interface{}) (string, []in
 	return d.Dialect.FormatQuery(output), sqlVals
 }
 
+// The Base Update sql is of the form UPDATE table SET col = ? WHERE ...
 func (d Base) Update(scope Scope, values map[string]interface{}) (string, []interface{}) {
 	output := "UPDATE " + scope.TableName() + " SET "
 	columns := make([]string, 0, len(values))
@@ -95,19 +91,27 @@ func (d Base) Update(scope Scope, values map[string]interface{}) (string, []inte
 	}
 	output += strings.Join(columns, "= ?, ") + " = ?"
 	conditions, sqlArgs := scope.ConditionSql()
-	output += " WHERE " + conditions
+	if conditions != "" {
+		output += " WHERE " + conditions
+	}
 
 	return d.Dialect.FormatQuery(output), append(args, sqlArgs...)
 }
 
+// The Base Delete sql takes the form of DELETE FROM `table` WHERE ...
 func (d Base) Delete(scope Scope) (string, []interface{}) {
 	output := "DELETE FROM " + scope.TableName()
 	conditions, sqlArgs := scope.ConditionSql()
-	output += " WHERE " + conditions
+	if conditions != "" {
+		output += " WHERE " + conditions
+	}
 
 	return d.Dialect.FormatQuery(output), sqlArgs
 }
 
+// The Base ColumnsInTable will attempt to use information_schema to
+// retrieve column names, it will not try to guess types for columns
+// It is in your best interest to implement this per database
 func (d Base) ColumnsInTable(db *sql.DB, dbName string, table string) map[string]*ColumnInfo {
 	columns := make(map[string]*ColumnInfo)
 	query := "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?"
@@ -121,7 +125,12 @@ func (d Base) ColumnsInTable(db *sql.DB, dbName string, table string) map[string
 		column := ""
 		err := rows.Scan(&column)
 		if err == nil {
-			columns[column] = new(ColumnInfo)
+			columns[column] = &ColumnInfo{
+				Name:      column,
+				SqlTable:  table,
+				SqlColumn: column,
+				Nullable:  true,
+			}
 		}
 	}
 	return columns
@@ -136,6 +145,7 @@ func (d Base) printArg(v interface{}) string {
 	}
 }
 
+// The Base ExpandGroupBy will return true
 func (d Base) ExpandGroupBy() bool {
 	return true
 }

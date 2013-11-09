@@ -3,7 +3,7 @@ Package db is a way to interface with sql databases as more than
 just simple data stores. At the moment, it is an ORM-like in an
 alpha state.
 
-Guiding Ideas (Some unimplemented)
+Guiding Ideas
 
 A Connection is both a sql.DB connection to an active database and
 a mechanism for translating that database connection into structs.

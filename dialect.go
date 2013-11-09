@@ -59,12 +59,4 @@ type Dialect interface {
 	// them, but we need to know whether we need to do it for this database
 	// system
 	ExpandGroupBy() bool
-
-	// Quote will quote identifiers in a SQL statement.
-	Quote(s string) string
-
-	// Being Replaced
-	//InsertSql(queryable *Queryable) (sql string, args []interface{})
-	//DeleteSql(queryable *Queryable) (string, []interface{})
-	//UpdateSql(queryable *Queryable) (string, []interface{})
 }
