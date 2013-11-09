@@ -491,6 +491,12 @@ Where scopings do not respect Func's at the moment, but they will in the future.
   // Where calls do not need Func instances to use functions
   Appointments.Where("end_date_time < TIMESTAMPADD(MINUTE, 5, appointments.begin_date_time)")
 
+The Col function allows you to specify a column to be used as a parameter
+in the same manner as a value or Func.
+
+  // Find all appointments that have been updated
+  Appointment.Cond("begin_date_time", db.LT, db.Col("end_date_time"))
+
 Dialects
 
 A Dialect creates a way for db to talk to a specific RDBMS. The current internal ones are

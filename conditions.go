@@ -11,6 +11,8 @@ func holderFor(v interface{}) string {
 	switch va := v.(type) {
 	case SqlFunc:
 		return va.Fragment()
+	case SqlCol:
+		return va.Fragment()
 	default:
 		return "?"
 	}
@@ -25,6 +27,8 @@ func valuesFor(v ...interface{}) []interface{} {
 			if len(fv) > 0 {
 				out = append(out, fv...)
 			}
+		case SqlCol:
+			// no values here
 		default:
 			out = append(out, arg)
 		}
@@ -34,14 +38,23 @@ func valuesFor(v ...interface{}) []interface{} {
 func Func(f string, values ...interface{}) SqlFunc {
 	return sqlFunc{f, values}
 }
+func Col(c string) SqlCol {
+	return sqlCol{c}
+}
 
 type sqlFunc struct {
 	fragment string
 	vals     []interface{}
 }
+type sqlCol struct {
+	column string
+}
 
 func (sf sqlFunc) Fragment() string {
 	return sf.fragment
+}
+func (sc sqlCol) Fragment() string {
+	return sc.column
 }
 func (sf sqlFunc) Values() []interface{} {
 	return sf.vals
@@ -49,10 +62,17 @@ func (sf sqlFunc) Values() []interface{} {
 func (sf sqlFunc) String() string {
 	return withVars(sf.fragment, sf.vals)
 }
+func (sf sqlCol) String() string {
+	return sf.column
+}
 
 type SqlFunc interface {
 	Fragment() string
 	Values() []interface{}
+	String() string
+}
+type SqlCol interface {
+	Fragment() string
 	String() string
 }
 

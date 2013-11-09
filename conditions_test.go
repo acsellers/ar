@@ -175,6 +175,7 @@ func TestHolderFor(t *testing.T) {
 	Within(t, func(test *Test) {
 		test.AreEqual("?", holderFor("asdf"))
 		test.AreEqual("NOW()", holderFor(Func("NOW()")))
+		test.AreEqual("begin_date_time", holderFor(Col("begin_date_time")))
 	})
 }
 
