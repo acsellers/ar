@@ -9,7 +9,7 @@ import (
 
 func holderFor(v interface{}) string {
 	switch va := v.(type) {
-	case SqlFormula:
+	case SqlFunc:
 		return va.Fragment()
 	default:
 		return "?"
@@ -20,7 +20,7 @@ func valuesFor(v ...interface{}) []interface{} {
 	out := []interface{}{}
 	for _, arg := range v {
 		switch at := arg.(type) {
-		case SqlFormula:
+		case SqlFunc:
 			fv := at.Values()
 			if len(fv) > 0 {
 				out = append(out, fv...)
@@ -31,26 +31,26 @@ func valuesFor(v ...interface{}) []interface{} {
 	}
 	return out
 }
-func Formula(f string, values ...interface{}) SqlFormula {
-	return sqlFormula{f, values}
+func Func(f string, values ...interface{}) SqlFunc {
+	return sqlFunc{f, values}
 }
 
-type sqlFormula struct {
+type sqlFunc struct {
 	fragment string
 	vals     []interface{}
 }
 
-func (sf sqlFormula) Fragment() string {
+func (sf sqlFunc) Fragment() string {
 	return sf.fragment
 }
-func (sf sqlFormula) Values() []interface{} {
+func (sf sqlFunc) Values() []interface{} {
 	return sf.vals
 }
-func (sf sqlFormula) String() string {
+func (sf sqlFunc) String() string {
 	return withVars(sf.fragment, sf.vals)
 }
 
-type SqlFormula interface {
+type SqlFunc interface {
 	Fragment() string
 	Values() []interface{}
 	String() string

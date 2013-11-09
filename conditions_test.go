@@ -174,13 +174,13 @@ func TestVaryCondition(t *testing.T) {
 func TestHolderFor(t *testing.T) {
 	Within(t, func(test *Test) {
 		test.AreEqual("?", holderFor("asdf"))
-		test.AreEqual("NOW()", holderFor(Formula("NOW()")))
+		test.AreEqual("NOW()", holderFor(Func("NOW()")))
 	})
 }
 
 func TestValuesFor(t *testing.T) {
 	Within(t, func(test *Test) {
 		test.AreEqual([]interface{}{5}, valuesFor(5))
-		test.AreEqual([]interface{}{5}, valuesFor(Formula("NOW(?)", 5)))
+		test.AreEqual([]interface{}{5}, valuesFor(Func("NOW(?)", 5)))
 	})
 }

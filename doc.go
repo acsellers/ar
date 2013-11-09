@@ -409,21 +409,87 @@ Mapper.SaveAll function.
   // initialize all instances in newPosts
   Posts.Initialize(newPosts)
 
+Joining and Sub-struct Operations
+
+While joining in db can be divided multiple ways, the simplest division may be the
+division between automatic joins and manual joins. Manual Joins may be specified by
+the user in the joins query and may add specifiers to the join call, or may be joining
+on non-intuitive columns. Automatic joins are discovered during mapping by db and
+can the be retrieved using the mapper or mixin, or using the Include Scope method.
+
+Manual scopes are intended for use either in cases when you need a filtering that is
+created from the existence of the join, or you need to select columns/formulas/etc.
+from the query using the Select method of retrieval.
+
+  // find posts that have not been commented on by a specific user
+  Posts.Join("LEFT JOIN comments ON comments.user_id = 123456 AND comments.post_id = posts.id").
+    EqualTo("comments.id", nil)
+
+  // find the average score of good and bad comments for posts that have both good and bad comments
+  var scoredPosts = []struct {
+    Post,
+    BadAverage, GoodAverage float64,
+  }
+  Posts.
+    Join("INNER JOIN comments AS bad_comments ON bad_comments.post_id = posts.id AND bad_comments.score < 0").
+    Join("INNER JOIN comments AS good_comments ON good_comments.post_id = posts.id AND good_comments.score > 0").
+    Group("posts.id").
+    Select(db.Selections{
+      db.TableSelection("posts.*"),
+      db.FormulaSelection("AVG(bad_comments.score)", "BadAverage"),
+      db.FormulaSelection("AVG(good_comments.score)", "GoodAverage"),
+      &scoredPosts,
+    )
+
+
+Automatic joins are declared as part of the struct, and then can be used in Join calls
+by simply passing in a string or mapper corresponding to the joined struct. See an example
+below. By default, joins are implemented as outer joins, but you can default specific joins
+to be inner joins in the sql statment by setting the struct tag of db_join to be inner.
+You can also use the alternative Join function, InnerJoin to have the join run as an inner
+join. Finally, if you have set a db_join to default to inner, but want it to be a outer join
+instead, you can use the OuterJoin function.
+
+  type Post struct {
+    Title, Body string
+
+    AuthorId int
+    Author *User `db_join:"inner"`
+    Comments []*Comment
+  }
+
+  // find all posts with authors that are guests
+  Posts.Join("Author").EqualTo("author.role", Author_GUEST)
+
+  // retrieve the posts from a specific author, that have featured comments
+  Posts.EqualTo("Author", theAuthor).Join(Comments).EqualTo("comments.featured", true)
+
+Possible Future Join Enhancements
+
+The FullJoin function allows you to retrieve records that don't have a match to the primary
+mapped struct. You pass the normal Join paramerters, but add a pointer to an array of the
+struct you are asking to be joined, which will be filled with the non-matching records when
+the first Retrieve/RetrieveAll call is made
+
+  // find all author's posts, also get one's that are missing an author
+  var authors []User
+  var orphaned []Post
+  User.FullJoin(&orphaned, Posts).Cond("posts.created_at", GTE, oneYearAgo).RetrieveAll(&authors)
+
 SQL Sundries
 
 If you need to use functions to be evaluated by the sql server as part of conditions,
-you can pass a formula created with the Formula function. Formulas can have their own
+you can pass a formula created with the Func function. Func's can have their own
 parameters, which you should specify using ?'s to denote where the values should appear.
-Where scopings do not respect Formula's at the moment, but they will in the future.
+Where scopings do not respect Func's at the moment, but they will in the future.
 
   // Find all appointments with a length of less than 5 minutes
   var tooShort []Appointment
-  shortFormula := db.Formula("TIMESTAMPADD(MINUTE, 5, appointments.begin_date_time)")
-  Appointments.Cond("end_date_time", db.LT, shortFormula).RetrieveAll(&tooShort)
+  shortFunc := db.Func("TIMESTAMPADD(MINUTE, 5, appointments.begin_date_time)")
+  Appointments.Cond("end_date_time", db.LT, shortFunc).RetrieveAll(&tooShort)
 
-  // Where calls do not need Formula instances to use functions
+  // Where calls do not need Func instances to use functions
   Appointments.Where("end_date_time < TIMESTAMPADD(MINUTE, 5, appointments.begin_date_time)")
-
 
 Dialects
 
