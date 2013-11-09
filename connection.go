@@ -108,8 +108,9 @@ func (c *Connection) newSource(name string, ptr interface{}, Options []map[strin
 	s.config = c.Config
 	s.Fields = c.createMappingsFromType(structType)
 	mn := fullNameFor(reflect.TypeOf(Mixin{}))
+	idName, _ := c.Config.IdName(name)
 	for _, field := range s.Fields {
-		if field.structOptions.Name == c.Config.IdName {
+		if field.structOptions.Name == idName {
 			s.ID = field
 		}
 		if field.FullName != "" {

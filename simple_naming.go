@@ -12,7 +12,9 @@ func NewSimpleConfig() *Config {
 		return strings.ToLower(fn) + "id"
 	}
 
-	c.IdName = "Id"
+	c.IdName = func(s string) (string, string) {
+		return "Id", "id"
+	}
 	c.CreatedColumn = "Creation"
 	c.UpdatedColumn = "Modified"
 

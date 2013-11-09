@@ -12,7 +12,9 @@ func NewRailsConfig() *Config {
 	c.ForeignKeyName = func(fn, sn string) string {
 		return strings.ToLower(fn) + "_id"
 	}
-	c.IdName = "Id"
+	c.IdName = func(s string) (string, string) {
+		return "Id", "id"
+	}
 	c.CreatedColumn = "CreatedAt"
 	c.UpdatedColumn = "UpdatedAt"
 
