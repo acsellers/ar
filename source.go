@@ -98,6 +98,41 @@ func (s *source) loadRelated() {
 func (s *source) locateForeignKeys() {
 	for _, f := range s.relations {
 		if f.ForeignKey == nil {
+			// we either have a has_many or a habtm
+			if f.Kind == reflect.Slice {
+				// we're going to search through the fields and try to find a matching
+				// field for our struct, we'll need to beef this up so we have 1 path
+				// for unaliased structs and 1 for aliased structs (aliased would be like
+				// Author User vs User User), if we find a matching field, we'll get the
+				// foreign key name for that field, then re-iterate through our relation's
+				// fields to find the one that matches the foreign key name
+				for _, rf := range f.Relation.Fields {
+					if rf.ColumnInfo == nil && rf.FullName == s.FullName {
+						kn := s.conn.Config.ForeignKeyName(rf.structOptions.Name, rf.FullName)
+						for _, pfk := range f.Relation.Fields {
+							if pfk.ColumnInfo != nil && pfk.ColumnInfo.SqlColumn == kn {
+								f.ForeignKey = pfk.ColumnInfo
+								continue
+							}
+						}
+					}
+				}
+			} else {
+				kn := s.conn.Config.ForeignKeyName(f.structOptions.Name, f.FullName)
+				for _, pfk := range s.Fields {
+					if pfk.ColumnInfo != nil && pfk.ColumnInfo.SqlColumn == kn {
+						f.ForeignKey = pfk.ColumnInfo
+						continue
+					}
+				}
+				for _, pfk := range f.Relation.Fields {
+					if pfk.ColumnInfo != nil && pfk.ColumnInfo.SqlColumn == kn {
+						f.ForeignKey = pfk.ColumnInfo
+						continue
+					}
+				}
+
+			}
 		}
 	}
 }
@@ -109,4 +144,5 @@ func (s *source) refreshRelated(sn string) {
 			s.relations = append(s.relations, f)
 		}
 	}
+	s.locateForeignKeys()
 }
