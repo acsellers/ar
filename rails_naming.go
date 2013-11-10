@@ -5,6 +5,19 @@ import (
 	"strings"
 )
 
+/*
+The RailsConfig tries to replicate Rails practices for
+naming.
+
+Table names are pluralized lowercase versions of struct
+names and field names are lowercased versions of field names.
+Foreign key names are the lowercased name of field with '_id'
+appended.
+
+Ids are identified with the field name "Id" and the database
+column "id", while the timestamp fields are "CreatedAt" and
+"UpdatedAt".
+*/
 func NewRailsConfig() *Config {
 	c := new(Config)
 	c.StructToTable = pluralizeStruct

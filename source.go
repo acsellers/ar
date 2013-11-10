@@ -66,13 +66,13 @@ type ColumnInfo struct {
 }
 
 func (s *source) runQuery(query string, values []interface{}) (*sql.Rows, error) {
-	return s.conn.DB.Query(query, values...)
+	return s.conn.Query(query, values...)
 }
 
 func (s *source) runQueryRow(query string, values []interface{}) *sql.Row {
-	return s.conn.DB.QueryRow(query, values...)
+	return s.conn.QueryRow(query, values...)
 }
 
 func (s *source) runExec(query string, values []interface{}) (sql.Result, error) {
-	return s.conn.DB.Exec(query, values...)
+	return s.conn.Exec(query, values...)
 }

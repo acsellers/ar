@@ -116,7 +116,7 @@ add to the current Scope.
   }
 
   var Users UserMapper
-  Connection.CreateMapperPlus("User", &Users)
+  Connection.InitMapperPlus("User", &Users)
 
   goodUsers := Users.RecentlyActive()
   moreGoodUsers := goodUsers.Activated()
@@ -132,7 +132,7 @@ to use for this situation.
     db.MapperPlus
   }
   var Users *UserMapper
-  db.CreateMapperPlus("User", &Users)
+  db.InitMapperPlus("User", &Users)
 
   // will error out
   &UserMapper{Users.Where(...).Identity()}
@@ -146,100 +146,23 @@ Scopes are the cornerstone of db. Scopes are the common case for creating SQL
 queries. Scopes come in different forms, depending on what you are wanting to
 accomplish.
 
-The Identity Scope will always return a copy of the current scope, whether it
-is on a Mapper, Scope or Mapper+. Internally it is the canonical method to
-duplicate a Scope.
+For instance, lets say I needed all students who have attended at least 1 class
+and have a score of 90 on the 3 tests they've taken.
 
-  recent := Posts.Where(...).Joins(...).Order(...)
-  recent2 := recent.Identity()
-  // recent != recent2
-  // recent.RetrieveAll(...) == recent2.RetrieveAll()
+  myClass.Students.
+    Join(myClass.Meetings).
+    EqualTo("meeting_attendance.attended", true).
+    Join(myClass.Quizzes).
+    GroupBy(myClass.Students)
+    Having(db.Func("AVG(quiz_score.overall)"), 90)
 
-The Cond Scope is the matching shorthand scope. It allows you to run common SQL
-matching conditions, but not have to write out the sql code like you would for
-the Where condition. Cond supports the matchers: Equal, Not Equal, Less Than,
-Less Than or Equal To, Greater Than, and Greater Than or Equal To.
+Or perhaps you would rather see the top 5 most popular posts on your blog
+from the articles you released in the past month.
 
-  // find all posts published since recentTime
-  recentScope := Posts.Cond("publish_date", db.GT, recentTime)
+  Posts.Cond("created_at", GTE, time.Now().AddDate(0, -1, 0).Order("hits").Limit(5)
 
-  // find all users created before longTimeAgo
-  ancientScope := Users.Cond("created_at", db.LESS_OR_EQUAL, longTimeAgo)
-
-  // find all appointments happening today
-  todaysAppointments := Appointments.Cond("end_time", db.GTE, beginningOfDay).Cond("begin_time", db.LTE, endingOfDay)
-
-The EqualTo scope is a short hand way of saying Cond(column, db.EQUAL_TO, value).
-
-  // find all admins
-  admins := Users.EqualTo("is_admin", true)
-
-  // find nicer users
-  niceUsers := Users.Joins(Bans).EqualTo("bans.id", nil)
-
-  // find non-permabanned users
-  meanUsers := Users.EqualTo("permabanned_on", nil)
-
-The Between Scope is a way to specify a SQL BETWEEN without writing a Where fragment.
-
-  // find last weeks posts
-  lastWeek := Posts.Between(twoWeeksAgo, oneWeekAgo)
-
-  // find the days appointments
-  appts := Appointment.Between(beginningOfDay, endingOfDay)
-
-The In Scope allows you to specify that a value should match 1 or more values in an array
-
-  // find appointment conflicts
-  conflicts := Appointments.Joins(Attendees).In("attendees.user_id", userIds)
-
-  // find powerful users
-  daPower := Users.In("user_type", []string{ADMIN, AUTHOR, BDFL, CTHULHU})
-
-The Where Scope is a generalized way to write SQL Expressions. It can do simple matching
-like EqualTo, Cond, Between or In written in SQL. It will also handle binding variables
-within a SQL statement.
-
-  // find awesome users
-  Users.Where("kudos_count >= ?", coolnessQuotient)
-
-  // find users with names like "mike"
-  Users.Where("first_name LIKE ?", "mike")
-
-  // find appointments that will be missed
-  Attendees.Where(
-    "user_ids IN (:students:) AND cancelled_on IS NULL AND begin_time BETWEEN :begin: AND :end:",
-    map[string]interface{}{
-      "students": userIds,
-      "begin":    tripBeginning,
-      "end":      tripEnding,
-    },
-  )
-
-The Limit Scope allows you to specify the maximum number of records returned in a
-RetrieveAll call.
-
-  // find the 10 newest users
-  Users.Limit(10).Order("created_at DESC")
-
-The Offset specifies the number of records that will be skipped when returning records
-
-  // find the users for the grid
-  Users.Limit(25).Offset((pageNum - 1) * 25)
-
-The ordering scopes are 3 different Scopes. The simplest is Order, which could be a sql fragment
-or just a column name. If you do not pass a specific direction, then the direction will be
-set to ascending. OrderBy allows you to specify the ordering as a string. Reorder will wipe
-any previous orders and replace them with the passed ordering.
-
-  // order by age
-  Users.Order("birth_date")
-
-  // order by creation date
-  Users.OrderBy("created_at", "DESC")
-
-  // order only by beginning time
-  Appointments.Reorder("begin_time")
+For detailed descriptions of each Scope function, please see the Queryable
+interface documentation.
 
 Database Mapping
 

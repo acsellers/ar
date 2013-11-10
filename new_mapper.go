@@ -2,39 +2,21 @@ package db
 
 import (
 	"reflect"
-	"strconv"
 )
 
-func (c *Connection) CreateMapper(name string, mapee interface{}, Options ...map[string]map[string]interface{}) (Mapper, error) {
-	msource := c.newSource(name, mapee, Options)
-	c.sources[name] = msource
-	if _, found := mappedStructs[msource.FullName]; found {
-		mappedStructs[msource.FullName] = &source{multiMapped: true}
-	} else {
-		mappedStructs[msource.FullName] = msource
-	}
-	c.mappedStructs[msource.FullName] = msource
+// CreateMapper returns a Mapper instance for the mapee struct you passed
+func (c *Connection) CreateMapper(name string, mapee interface{}) (Mapper, error) {
+	// create and save the source (primary mapper interfacee)
+	ms := c.newSource(name, mapee)
+	c.sources[name] = ms
 
-	return msource, nil
+	c.createRelations(ms)
+
+	return ms, nil
 }
 
-func (c *Connection) m(name string) Mapper {
-	if s, ok := c.sources[name]; ok {
-		return s
-	}
-	return nil
-}
-
-func (c *Connection) CreateMapperPlus(name string, v interface{}, Options ...map[string]map[string]interface{}) {
-	rv := reflect.ValueOf(v).Elem()
-	fv := rv.Field(0)
-	mp := new(mapperPlus)
-	vmp := reflect.ValueOf(mp)
-	if fv.Type().Kind() == reflect.Ptr {
-		fv.Set(vmp)
-	}
-}
-
+// This is the same as CreateMapper, but will panic on an error instead
+// of returning it
 func (c *Connection) MustCreateMapper(name string, v interface{}) Mapper {
 	m, e := c.CreateMapper(name, v)
 	if e != nil {
@@ -43,6 +25,37 @@ func (c *Connection) MustCreateMapper(name string, v interface{}) Mapper {
 	return m
 }
 
+func (c *Connection) createRelations(s *source) {
+	if _, found := mappedStructs[s.FullName]; found {
+		mappedStructs[s.FullName] = &source{multiMapped: true}
+	} else {
+		mappedStructs[msource.FullName] = msource
+	}
+	c.mappedStructs[msource.FullName] = msource
+
+	return msource, nil
+}
+
+// this function is to make testing with multiple
+// RDBMS's simpler
+func (c *Connection) m(name string) Mapper {
+	if s, ok := c.sources[name]; ok {
+		return s
+	}
+	return nil
+}
+
+// Initialize a MapperPlus instance, need more documentation
+// and tests on this
+func (c *Connection) InitMapperPlus(name string, v interface{}, Options ...map[string]map[string]interface{}) {
+	rv := reflect.ValueOf(v).Elem()
+	fv := rv.Field(0)
+	mp := new(mapperPlus)
+	vmp := reflect.ValueOf(mp)
+	if fv.Type().Kind() == reflect.Ptr {
+		fv.Set(vmp)
+	}
+}
 func (c *Connection) createMapperForPtr(ptr interface{}) (string, *Mapper) {
 	return "model", new(Mapper)
 }

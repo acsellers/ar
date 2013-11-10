@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+
+	"github.com/dchest/cache"
 )
 
 // Each Connection can have multiple loggers, and each logger
@@ -19,7 +21,9 @@ const (
 var mappedStructs = make(map[string]*source)
 
 type Connection struct {
-	DB              *sql.DB
+	// This is the main Database connection used by the Connection
+	DB *sql.DB
+	// The Dialect that the Connection uses to format queries
 	Dialect         Dialect
 	mappedStructs   map[string]*source
 	mappableStructs map[string][]*source
@@ -29,9 +33,20 @@ type Connection struct {
 	errorLogs       []Logger
 	queryLogs       []Logger
 	sources         map[string]*source
-	Config          *Config
+	// The Config for mapping structs to database tables and records
+	Config *Config
+	// The QueryCache for saving and reusing Queries. To disable, simply set this to nil
+	// By default, it will store up to 4096 distinct queries, you can use the
+	// CacheSize(n int) to change the query storage number
+	QueryCache *cache.Cache
 }
 
+/*
+NewConnection creates a connection to a specific database server with
+a specific database. Connections are used to create Mappers, which are
+then used to retrieve records. Note that NewConnection will set the
+MaxIdleConns to 100 for the database connection.
+*/
 func NewConnection(dialectName, dbName, connector string) (*Connection, error) {
 	conn := new(Connection)
 	if dialect, found := registeredDialects[dialectName]; found {
@@ -52,14 +67,17 @@ func NewConnection(dialectName, dbName, connector string) (*Connection, error) {
 	conn.mappedStructs = make(map[string]*source)
 	conn.mappableStructs = make(map[string][]*source)
 	conn.sources = make(map[string]*source)
+	conn.QueryCache = cache.New(cache.Config{
+		MaxItems:        4096,
+		TrackAccessTime: true,
+		RemoveHandler: func(p cache.Item) {
+			if q, ok := p.Value.(*sql.Stmt); ok {
+				q.Close()
+			}
+		},
+	})
 
 	return conn, nil
-}
-
-// db will set the pool size for a connection to 100, if you need
-// a different pool size, you can do it with this function
-func (c *Connection) ChangePoolSize(size int) {
-	c.DB.SetMaxIdleConns(size)
 }
 
 // A Connection can be closed, which essentially means that the
@@ -97,7 +115,7 @@ func fullNameFor(t reflect.Type) string {
 	}
 	return t.PkgPath() + ":" + t.Name()
 }
-func (c *Connection) newSource(name string, ptr interface{}, Options []map[string]map[string]interface{}) *source {
+func (c *Connection) newSource(name string, ptr interface{}) *source {
 	structType := getType(ptr)
 
 	s := new(source)
@@ -121,7 +139,7 @@ func (c *Connection) newSource(name string, ptr interface{}, Options []map[strin
 		}
 	}
 	c.createSqlMappings(s)
-	c.propagateOptions(s, Options)
+	//c.propagateOptions(s, Options)
 	s.structName = structType.Name()
 
 	return s
@@ -238,4 +256,78 @@ func (c *Connection) createSqlMappings(s *source) {
 			}
 		}
 	}
+}
+
+// This is almost the same as Connection.DB.Query(query, args), but will
+// prepare the statement and cache it in the connection's query cache.
+// The resemblence to the database/sql DB interface is intentional.
+//
+// rows, e := pgConn.Query(bigQuery, values...)
+func (c *Connection) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	stmt, e := c.getQuery(query)
+	if e == nil {
+		return stmt.Query(args...)
+	} else {
+		return c.DB.Query(query, args...)
+	}
+}
+
+// This is almost the same as Connection.DB.QueryRow(query, args), but will
+// prepare the statement and cache it in the connection's query cache.
+// The resemblence to the database/sql DB interface is intentional.
+//
+// row := pgConn.QueryRow(complicated, values...)
+func (c *Connection) QueryRow(query string, args ...interface{}) *sql.Row {
+	stmt, e := c.getQuery(query)
+	if e == nil {
+		return stmt.QueryRow(args...)
+	} else {
+		return c.DB.QueryRow(query, args...)
+	}
+}
+
+// This is almost the same as Connection.DB.Exec(query, args), but will
+// prepare the statement and cache it in the connection's query cache.
+// The resemblence to the database/sql DB interface is intentional.
+//
+// result, e := pgConn.Exec(createThings, values...)
+func (c *Connection) Exec(query string, args ...interface{}) (sql.Result, error) {
+	stmt, e := c.getQuery(query)
+	if e == nil {
+		return stmt.Exec(args...)
+	} else {
+		return c.DB.Exec(query, args...)
+	}
+}
+
+func (c *Connection) CacheSize(n int) {
+	c.QueryCache.Reconfigure(cache.Config{
+		MaxItems:        n,
+		TrackAccessTime: true,
+		RemoveHandler: func(p cache.Item) {
+			if q, ok := p.Value.(*sql.Stmt); ok {
+				q.Close()
+			}
+		},
+	})
+}
+
+func (c *Connection) getQuery(query string) (*sql.Stmt, error) {
+	if c.QueryCache == nil {
+		return nil, fmt.Errorf("QueryCache not enabled")
+	}
+
+	i, ok := c.QueryCache.Get(query)
+	if ok {
+		if q, ok := i.(*sql.Stmt); ok {
+			return q, nil
+		}
+	}
+	q, e := c.DB.Prepare(query)
+	if e != nil {
+		return nil, e
+	}
+	c.QueryCache.Set(query, q, 0)
+
+	return q, nil
 }
