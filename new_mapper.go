@@ -29,11 +29,18 @@ func (c *Connection) createRelations(s *source) {
 	if _, found := mappedStructs[s.FullName]; found {
 		mappedStructs[s.FullName] = &source{multiMapped: true}
 	} else {
-		mappedStructs[msource.FullName] = msource
+		mappedStructs[s.FullName] = s
 	}
-	c.mappedStructs[msource.FullName] = msource
+	c.mappedStructs[s.FullName] = s
 
-	return msource, nil
+	if dependents, ok := c.mappableStructs[s.FullName]; ok {
+		for _, d := range dependents {
+			d.refreshRelated(s.FullName)
+		}
+	}
+	delete(c.mappableStructs, s.FullName)
+
+	s.loadRelated()
 }
 
 // this function is to make testing with multiple

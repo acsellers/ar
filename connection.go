@@ -135,6 +135,7 @@ func (c *Connection) newSource(name string, ptr interface{}) *source {
 			if field.FullName == mn {
 				s.hasMixin = true
 				s.mixinField = field.Index
+				field.Mapped = true
 			}
 		}
 	}

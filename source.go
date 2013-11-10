@@ -16,6 +16,7 @@ type source struct {
 	multiMapped bool
 	config      *Config
 	conn        *Connection
+	relations   []*sourceMapping
 	Fields      []*sourceMapping
 
 	structName, tableName string
@@ -75,4 +76,37 @@ func (s *source) runQueryRow(query string, values []interface{}) *sql.Row {
 
 func (s *source) runExec(query string, values []interface{}) (sql.Result, error) {
 	return s.conn.Exec(query, values...)
+}
+
+func (s *source) loadRelated() {
+	var reload bool
+	for _, f := range s.Fields {
+		if !f.Mapped && f.ColumnInfo == nil {
+			if rs, ok := s.conn.mappedStructs[f.FullName]; ok {
+				f.Relation = rs
+				s.relations = append(s.relations, f)
+				reload = true
+			} else {
+				s.conn.mappableStructs[f.FullName] = append(s.conn.mappableStructs[f.FullName], s)
+			}
+		}
+	}
+	if reload {
+		s.locateForeignKeys()
+	}
+}
+func (s *source) locateForeignKeys() {
+	for _, f := range s.relations {
+		if f.ForeignKey == nil {
+		}
+	}
+}
+func (s *source) refreshRelated(sn string) {
+	ns := s.conn.mappedStructs[sn]
+	for _, f := range s.Fields {
+		if f.FullName == sn {
+			f.Relation = ns
+			s.relations = append(s.relations, f)
+		}
+	}
 }
