@@ -263,7 +263,7 @@ func (c *Connection) createSqlMappings(s *source) {
 // prepare the statement and cache it in the connection's query cache.
 // The resemblence to the database/sql DB interface is intentional.
 //
-// rows, e := pgConn.Query(bigQuery, values...)
+//  rows, e := pgConn.Query(bigQuery, values...)
 func (c *Connection) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	stmt, e := c.getQuery(query)
 	if e == nil {
@@ -277,7 +277,7 @@ func (c *Connection) Query(query string, args ...interface{}) (*sql.Rows, error)
 // prepare the statement and cache it in the connection's query cache.
 // The resemblence to the database/sql DB interface is intentional.
 //
-// row := pgConn.QueryRow(complicated, values...)
+//  row := pgConn.QueryRow(complicated, values...)
 func (c *Connection) QueryRow(query string, args ...interface{}) *sql.Row {
 	stmt, e := c.getQuery(query)
 	if e == nil {
@@ -291,7 +291,7 @@ func (c *Connection) QueryRow(query string, args ...interface{}) *sql.Row {
 // prepare the statement and cache it in the connection's query cache.
 // The resemblence to the database/sql DB interface is intentional.
 //
-// result, e := pgConn.Exec(createThings, values...)
+//  result, e := pgConn.Exec(createThings, values...)
 func (c *Connection) Exec(query string, args ...interface{}) (sql.Result, error) {
 	stmt, e := c.getQuery(query)
 	if e == nil {
@@ -301,6 +301,9 @@ func (c *Connection) Exec(query string, args ...interface{}) (sql.Result, error)
 	}
 }
 
+// Set the number of queries that may be present in the query cache
+// at any time. Default is 4096 for the arbitrary reason of I like
+// that number.
 func (c *Connection) CacheSize(n int) {
 	c.QueryCache.Reconfigure(cache.Config{
 		MaxItems:        n,

@@ -35,9 +35,15 @@ func valuesFor(v ...interface{}) []interface{} {
 	}
 	return out
 }
+
+// Constructor for SQL Functions to be used in different
+// Queryable functions as a value
 func Func(f string, values ...interface{}) SqlFunc {
 	return sqlFunc{f, values}
 }
+
+// Constructor to allow SQL table columns to be used as
+// values in Queryable functions
 func Col(c string) SqlCol {
 	return sqlCol{c}
 }
@@ -66,11 +72,19 @@ func (sf sqlCol) String() string {
 	return sf.column
 }
 
+// Interface for a SQL Function condition
 type SqlFunc interface {
+	// The SQL code with ?'s standing in for parameters.
 	Fragment() string
+	// The parameters to replace the ?'s in Fragment.
 	Values() []interface{}
+	// A version of Fragment with the parameters inside that
+	// is suitable for logging.
 	String() string
 }
+
+// Interface for a SQL Column that you can use in Queryable
+// functions
 type SqlCol interface {
 	Fragment() string
 	String() string

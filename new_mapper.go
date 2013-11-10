@@ -54,7 +54,7 @@ func (c *Connection) m(name string) Mapper {
 
 // Initialize a MapperPlus instance, need more documentation
 // and tests on this
-func (c *Connection) InitMapperPlus(name string, v interface{}, Options ...map[string]map[string]interface{}) {
+func (c *Connection) InitMapperPlus(name string, v interface{}) {
 	rv := reflect.ValueOf(v).Elem()
 	fv := rv.Field(0)
 	mp := new(mapperPlus)
