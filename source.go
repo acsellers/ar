@@ -118,6 +118,7 @@ func (s *source) locateForeignKeys() {
 					}
 				}
 			} else {
+				// find belongs to relation fields
 				kn := s.conn.Config.ForeignKeyName(f.structOptions.Name, f.FullName)
 				for _, pfk := range s.Fields {
 					if pfk.ColumnInfo != nil && pfk.ColumnInfo.SqlColumn == kn {
@@ -125,6 +126,7 @@ func (s *source) locateForeignKeys() {
 						continue
 					}
 				}
+				// find has one relations
 				for _, pfk := range f.Relation.Fields {
 					if pfk.ColumnInfo != nil && pfk.ColumnInfo.SqlColumn == kn {
 						f.ForeignKey = pfk.ColumnInfo

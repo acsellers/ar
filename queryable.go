@@ -186,6 +186,9 @@ func (q *queryable) Count() (int64, error) {
 	query, values := qq.source.conn.Dialect.Query(qq)
 	row := qq.source.runQueryRow(query, values)
 	err := row.Scan(&count)
+	if err != nil {
+		fmt.Println(query)
+	}
 
 	return count, err
 }

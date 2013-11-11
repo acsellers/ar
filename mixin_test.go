@@ -65,8 +65,8 @@ func TestMixin(t *testing.T) {
 			test.AreEqual(1, c)
 			test.NoError(e)
 
-			test.IsFalse(firstPost.IsNull("userid"))
-			test.IsTrue(secondPost.IsNull("userid"))
+			test.IsFalse(firstPost.IsNull("user_id"))
+			test.IsTrue(secondPost.IsNull("user_id"))
 		}
 	})
 }

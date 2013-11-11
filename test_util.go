@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"os"
 )
@@ -47,7 +48,7 @@ func setupMysqlTestConn() *Connection {
 	if err != nil {
 		panic(err)
 	}
-	conn.Config = NewSimpleConfig()
+	conn.Config = NewRailsConfig()
 	conn.CreateMapper("Post", &post{})
 	conn.CreateMapper("User", &user{})
 
@@ -62,7 +63,7 @@ func setupPostgresTestConn() *Connection {
 	for _, line := range postgresCreateScript {
 		_, err = db.Exec(line)
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprint(line, err))
 		}
 	}
 
@@ -70,7 +71,7 @@ func setupPostgresTestConn() *Connection {
 	if err != nil {
 		panic(err)
 	}
-	conn.Config = NewSimpleConfig()
+	conn.Config = NewRailsConfig()
 	conn.CreateMapper("Post", &post{})
 	conn.CreateMapper("User", &user{})
 
@@ -78,7 +79,7 @@ func setupPostgresTestConn() *Connection {
 }
 
 func setupSqliteTestConn() *Connection {
-	conn, err := NewConnection("sqlite3", "main", "testing.db")
+	conn, err := NewConnection("sqlite3", "main", ":memory:")
 	if err != nil {
 		panic(err)
 	}
@@ -89,7 +90,7 @@ func setupSqliteTestConn() *Connection {
 		}
 	}
 
-	conn.Config = NewSimpleConfig()
+	conn.Config = NewRailsConfig()
 	conn.CreateMapper("Post", &post{})
 	conn.CreateMapper("User", &user{})
 
@@ -130,31 +131,31 @@ type user struct {
 }
 
 var mysqlCreateScript = []string{
-	"DROP TABLE IF EXISTS `post` CASCADE;",
-	"CREATE TABLE `post` ( \n" +
+	"DROP TABLE IF EXISTS `posts` CASCADE;",
+	"CREATE TABLE `posts` ( \n" +
 		"	`id` Int( 255 ) UNSIGNED AUTO_INCREMENT NOT NULL, \n" +
 		"	`title` Text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL, \n" +
 		"	`permalink` VarChar( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL, \n" +
 		"	`body` Text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL, \n" +
 		"	`views` Int( 255 ) UNSIGNED NOT NULL DEFAULT '1', \n" +
-		"	`userid` Int( 255 ) UNSIGNED,\n" +
+		"	`user_id` Int( 255 ) UNSIGNED,\n" +
 		"	 PRIMARY KEY ( `id` )\n" +
 		" )\n" +
 		"CHARACTER SET = utf8\n" +
 		"COLLATE = utf8_general_ci\n" +
 		"ENGINE = InnoDB\n" +
 		"AUTO_INCREMENT = 3;\n",
-	"INSERT INTO `post`(`id`,`title`,`permalink`,`body`,`views`,`userid`) VALUES ( '1', 'First Post', 'first_post', 'This is the first post', '1', '1' );\n",
-	"INSERT INTO `post`(`id`,`title`,`permalink`,`body`,`views`) VALUES ( '2', 'Second Post', 'second_post', 'Hey must be committed to this, I wrote a second post', '1');;\n",
-	"CREATE UNIQUE INDEX `unique_id` USING BTREE ON `post`( `id` );\n",
-	"CREATE UNIQUE INDEX `unique_permalink` USING BTREE ON `post`( `permalink` );\n",
-	"DROP TABLE IF EXISTS `user` CASCADE;\n",
-	"CREATE TABLE `user` ( \n" +
+	"INSERT INTO `posts`(`id`,`title`,`permalink`,`body`,`views`,`user_id`) VALUES ( '1', 'First Post', 'first_post', 'This is the first post', '1', '1' );\n",
+	"INSERT INTO `posts`(`id`,`title`,`permalink`,`body`,`views`) VALUES ( '2', 'Second Post', 'second_post', 'Hey must be committed to this, I wrote a second post', '1');;\n",
+	"CREATE UNIQUE INDEX `unique_id` USING BTREE ON `posts`( `id` );\n",
+	"CREATE UNIQUE INDEX `unique_permalink` USING BTREE ON `posts`( `permalink` );\n",
+	"DROP TABLE IF EXISTS `users` CASCADE;\n",
+	"CREATE TABLE `users` ( \n" +
 		"	`id` Int( 255 ) UNSIGNED AUTO_INCREMENT NOT NULL, \n" +
 		"	`name` VarChar( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'nobody', \n" +
 		"	`email` VarChar( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL, \n" +
 		"	`password` VarChar( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL, \n" +
-		"	`story` Text CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL, \n" +
+		"	`story` Text CHARACTER SET utf8 COLLATE utf8_general_ci NULL, \n" +
 		"	`image` Blob NULL,\n" +
 		"	 PRIMARY KEY ( `id` )\n" +
 		" )\n" +
@@ -162,74 +163,79 @@ var mysqlCreateScript = []string{
 		"COLLATE = utf8_general_ci\n" +
 		"ENGINE = InnoDB\n" +
 		"AUTO_INCREMENT = 1;\n",
-	"CREATE UNIQUE INDEX `unique_email` USING BTREE ON `user`( `email` );\n",
-	"CREATE UNIQUE INDEX `unique_id` USING BTREE ON `user`( `id` );\n",
-	"CREATE UNIQUE INDEX `unique_name` USING BTREE ON `user`( `name` );",
+	"CREATE UNIQUE INDEX `unique_email` USING BTREE ON `users`( `email` );\n",
+	"CREATE UNIQUE INDEX `unique_id` USING BTREE ON `users`( `id` );\n",
+	"CREATE UNIQUE INDEX `unique_name` USING BTREE ON `users`( `name` );\n",
+	"INSERT INTO `users` (`id`,`email`,`password`,`name`) VALUES ('1','user@example.com', 'id10t', 'wat');",
 }
 
 var sqliteCreateScript = []string{
-	`DROP TABLE IF EXISTS "post";`,
+	`DROP TABLE IF EXISTS "posts";`,
 
-	`CREATE TABLE "post"(
+	`CREATE TABLE "posts"(
     "id" Integer NOT NULL PRIMARY KEY AUTOINCREMENT,
     "title" Text NOT NULL,
     "permalink" Text NOT NULL,
     "body" Text NOT NULL,
     "views" Integer NOT NULL DEFAULT 1,
-    "userid" Integer,
+    "user_id" Integer,
   CONSTRAINT "unique_id" UNIQUE ( "id" ),
   CONSTRAINT "unique_permalink" UNIQUE ( "permalink" ) );`,
 
-	`CREATE INDEX "index_id" ON "post"( "id" );`,
+	`CREATE INDEX "index_id" ON "posts"( "id" );`,
 
-	`INSERT INTO "post"("id","title","permalink","body","views","userid") VALUES ( 1,'First Post','first_post','This is the first post',1,1 );`,
-	`INSERT INTO "post"("id","title","permalink","body","views","userid") VALUES ( 2,'Second Post','second_post','Hey must be committed to this, I wrote a second post',1,NULL);`,
+	`INSERT INTO "posts"("id","title","permalink","body","views","user_id") VALUES ( 1,'First Post','first_post','This is the first post',1,1 );`,
+	`INSERT INTO "posts"("id","title","permalink","body","views","user_id") VALUES ( 2,'Second Post','second_post','Hey must be committed to this, I wrote a second post',1,NULL);`,
 
-	`DROP TABLE IF EXISTS "user";`,
+	`DROP TABLE IF EXISTS "users";`,
 
-	`CREATE TABLE "user"(
+	`CREATE TABLE "users"(
     "id" Integer NOT NULL PRIMARY KEY AUTOINCREMENT,
     "name" Text NOT NULL,
     "email" Text NOT NULL,
     "password" Text NOT NULL,
-    "story" Text NOT NULL,
+    "story" Text NULL,
     "image" BLOB,
   CONSTRAINT "unique_email" UNIQUE ( "email" ),
   CONSTRAINT "unique_id" UNIQUE ( "id" ),
   CONSTRAINT "unique_name" UNIQUE ( "name" ) );`,
 
-	`CREATE INDEX "index_id1" ON "user"( "id" );`,
+	`CREATE INDEX "index_id1" ON "users"( "id" );`,
+
+	`INSERT INTO "users" ("id", "email","password","name") VALUES (1, 'user@example.com', 'id10t', 'wat');`,
 }
 
 var postgresCreateScript = []string{
-	`DROP TABLE IF EXISTS "post"`,
-	`CREATE TABLE post(
+	`DROP TABLE IF EXISTS "posts"`,
+	`CREATE TABLE posts(
     id bigserial NOT NULL,
     title character varying(255) NOT NULL,
     permalink character varying(255) NOT NULL,
     body text,
     views integer NOT NULL DEFAULT 1,
-    userid integer,
-    CONSTRAINT pk_post PRIMARY KEY (id)
+    user_id integer,
+    CONSTRAINT pk_posts PRIMARY KEY (id)
   ) WITH (
     OIDS=FALSE
   );`,
-	`ALTER TABLE post OWNER TO postgres;`,
-	"INSERT INTO post (title,permalink,body,views,userid) VALUES ('First Post', 'first_post', 'This is the first post', 1,1);",
-	"INSERT INTO post (title,permalink,body,views) VALUES ('Second Post', 'second_post', 'Hey must be committed to this, I wrote a second post', 1);",
-	`DROP TABLE IF EXISTS "user"`,
-	`CREATE TABLE "user" (
+	`ALTER TABLE posts OWNER TO postgres;`,
+	"INSERT INTO posts (title,permalink,body,views,user_id) VALUES ('First Post', 'first_post', 'This is the first post', 1,1);",
+	"INSERT INTO posts (title,permalink,body,views) VALUES ('Second Post', 'second_post', 'Hey must be committed to this, I wrote a second post', 1);",
+
+	`DROP TABLE IF EXISTS "users"`,
+	`CREATE TABLE "users"(
     id bigserial NOT NULL,
+    name character varying(255) NOT NULL,
     email character varying(255) NOT NULL,
     password character varying(255) NOT NULL,
     story text,
     image bytea,
-    name character varying(255) NOT NULL,
-    CONSTRAINT pk_user PRIMARY KEY (id),
+    CONSTRAINT pk_users PRIMARY KEY (id),
     CONSTRAINT unique_email UNIQUE (email),
     CONSTRAINT unique_name UNIQUE (name)
   ) WITH (
     OIDS=FALSE
   );`,
-	`ALTER TABLE "user" OWNER TO postgres;`,
+	`ALTER TABLE "users" OWNER TO postgres;`,
+	`INSERT INTO "users" (email,password,name) VALUES ('user@example.com', 'id10t', 'wat');`,
 }
