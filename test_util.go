@@ -50,21 +50,15 @@ func setupMysqlTestConn() *Connection {
 	}
 	conn.Config = NewRailsConfig()
 
-	createDefaultPosts(conn.MustCreateMapper("Post", &post{}))
-	createDefaultUsers(conn.MustCreateMapper("User", &user{}))
+	p := conn.MustCreateMapper("Post", &post{})
+	u := conn.MustCreateMapper("User", &user{})
+	createDefaultPosts(p)
+	createDefaultUsers(u)
 
 	return conn
 }
 
 func createDefaultPosts(Posts Mapper) {
-	p := post{
-		Title:     "Second Post",
-		Permalink: "second_post",
-		Body:      "This is the first post",
-		Views:     1,
-	}
-	Posts.Initialize(&p)
-	p.SetNull("UserId")
 	Posts.SaveAll([]post{
 		post{
 			Title:     "First Post",
@@ -73,7 +67,12 @@ func createDefaultPosts(Posts Mapper) {
 			Views:     1,
 			UserId:    1,
 		},
-		p,
+		post{
+			Title:     "Second Post",
+			Permalink: "second_post",
+			Body:      "This is the first post",
+			Views:     1,
+		},
 	})
 }
 
@@ -98,8 +97,10 @@ func setupPostgresTestConn() *Connection {
 		panic(err)
 	}
 	conn.Config = NewRailsConfig()
-	createDefaultPosts(conn.MustCreateMapper("Post", &post{}))
-	createDefaultUsers(conn.MustCreateMapper("User", &user{}))
+	p := conn.MustCreateMapper("Post", &post{})
+	u := conn.MustCreateMapper("User", &user{})
+	createDefaultPosts(p)
+	createDefaultUsers(u)
 
 	return conn
 }
@@ -117,8 +118,10 @@ func setupSqliteTestConn() *Connection {
 	}
 
 	conn.Config = NewRailsConfig()
-	createDefaultPosts(conn.MustCreateMapper("Post", &post{}))
-	createDefaultUsers(conn.MustCreateMapper("User", &user{}))
+	p := conn.MustCreateMapper("Post", &post{})
+	u := conn.MustCreateMapper("User", &user{})
+	createDefaultPosts(p)
+	createDefaultUsers(u)
 
 	return conn
 }

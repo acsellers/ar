@@ -280,6 +280,25 @@ func (m *source) extractColumnValues(v reflect.Value) map[string]interface{} {
 					}
 				}
 			}
+		} else {
+			for _, f := range m.Fields {
+				if f.MappedColumn() && f.IsForeignKey {
+					fv := v.Field(f.structOptions.Index)
+					if reflect.Zero(fv.Type()).Interface() == fv.Interface() {
+						output[f.ColumnInfo.Name] = nil
+					}
+				}
+			}
+
+		}
+	} else {
+		for _, f := range m.Fields {
+			if f.MappedColumn() && f.IsForeignKey {
+				fv := v.Field(f.structOptions.Index)
+				if reflect.Zero(fv.Type()).Interface() == fv.Interface() {
+					output[f.ColumnInfo.Name] = nil
+				}
+			}
 		}
 	}
 	return output

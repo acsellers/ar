@@ -52,15 +52,16 @@ func (sm *sourceMapping) NamedBy(s string) bool {
 }
 
 type structOptions struct {
-	Name       string
-	Mapped     bool
-	FullName   string
-	Index      int
-	Kind       reflect.Kind
-	ColumnHint string
-	Options    map[string]interface{}
-	Relation   *source
-	ForeignKey *ColumnInfo
+	Name         string
+	Mapped       bool
+	FullName     string
+	Index        int
+	Kind         reflect.Kind
+	ColumnHint   string
+	Options      map[string]interface{}
+	Relation     *source
+	ForeignKey   *ColumnInfo
+	IsForeignKey bool
 }
 
 // ColumnInfo is the data returned by a ColumnsInTable function which is
@@ -132,6 +133,7 @@ func (s *source) locateForeignKeys() {
 						for _, pfk := range f.Relation.Fields {
 							if pfk.ColumnInfo != nil && pfk.ColumnInfo.SqlColumn == kn {
 								f.ForeignKey = pfk.ColumnInfo
+								pfk.IsForeignKey = true
 								continue
 							}
 						}
@@ -143,6 +145,7 @@ func (s *source) locateForeignKeys() {
 				for _, pfk := range s.Fields {
 					if pfk.ColumnInfo != nil && pfk.ColumnInfo.SqlColumn == kn {
 						f.ForeignKey = pfk.ColumnInfo
+						pfk.IsForeignKey = true
 						continue
 					}
 				}
@@ -150,6 +153,7 @@ func (s *source) locateForeignKeys() {
 				for _, pfk := range f.Relation.Fields {
 					if pfk.ColumnInfo != nil && pfk.ColumnInfo.SqlColumn == kn {
 						f.ForeignKey = pfk.ColumnInfo
+						pfk.IsForeignKey = true
 						continue
 					}
 				}
