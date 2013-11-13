@@ -87,8 +87,8 @@ func (mp *mapperPlus) ConditionSql() (string, []interface{}) {
 	return mp.identity().query.ConditionSql()
 }
 
-func (mp *mapperPlus) JoinSql() string {
-	return mp.identity().query.JoinSql()
+func (mp *mapperPlus) JoinsSql() string {
+	return mp.identity().query.JoinsSql()
 }
 func (mp *mapperPlus) EndingSql() string {
 	return mp.identity().query.EndingSql()
@@ -110,7 +110,7 @@ func (mp *mapperPlus) Count() (int64, error) {
 	return mp.identity().Count()
 }
 
-func (mp *mapperPlus) Pluck(column string, vals interface{}) error {
+func (mp *mapperPlus) Pluck(column, vals interface{}) error {
 	return mp.identity().Pluck(column, vals)
 }
 func (mp *mapperPlus) TableName() string {
@@ -135,4 +135,55 @@ func (mp *mapperPlus) Initialize(val ...interface{}) error {
 }
 func (mp *mapperPlus) SaveAll(val interface{}) error {
 	return mp.source.SaveAll(val)
+}
+func (mp *mapperPlus) LeftJoin(joins ...interface{}) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.LeftJoin(joins...)
+	return mp
+}
+func (mp *mapperPlus) InnerJoin(joins ...interface{}) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.InnerJoin(joins...)
+	return mp
+}
+func (mp *mapperPlus) FullJoin(joins ...interface{}) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.FullJoin(joins...)
+	return mp
+}
+func (mp *mapperPlus) RightJoin(joins ...interface{}) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.RightJoin(joins...)
+	return mp
+}
+func (mp *mapperPlus) JoinSql(sql string, args ...interface{}) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.JoinSql(sql, args...)
+	return mp
+}
+
+func (mp *mapperPlus) LeftInclude(include ...interface{}) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.LeftInclude(include...)
+	return mp
+}
+func (mp *mapperPlus) InnerInclude(include ...interface{}) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.InnerInclude(include...)
+	return mp
+}
+func (mp *mapperPlus) FullInclude(include interface{}, nullRecords interface{}) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.FullInclude(include, nullRecords)
+	return mp
+}
+func (mp *mapperPlus) RightInclude(include interface{}, nullRecords interface{}) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.RightInclude(include, nullRecords)
+	return mp
+}
+func (mp *mapperPlus) IncludeSql(il IncludeList, query string, args ...interface{}) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.IncludeSql(il, query, args...)
+	return mp
 }

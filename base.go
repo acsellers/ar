@@ -51,7 +51,7 @@ func (d Base) CreateExec() bool {
 // Create a basic SELECT query using ScopeInformation functions
 func (d Base) Query(scope Scope) (string, []interface{}) {
 	output := "SELECT " + scope.SelectorSql() + " FROM " + scope.TableName()
-	output += scope.JoinSql()
+	output += scope.JoinsSql()
 	conditions, values := scope.ConditionSql()
 	if conditions != "" {
 		output += " WHERE " + conditions

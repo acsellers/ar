@@ -96,6 +96,59 @@ any previous orders and replace them with the passed ordering.
   // order only by beginning time
   Appointments.Reorder("begin_time")
 
+Joining and Including Related Tables
+
+There's two different ways of dealing with joining in db, joining for the
+use in Scopes and joining for the use of returning related data. When you
+just want to use the data for scoping conditions or for Pluck/custom
+selections, you can use the *Join functions (InnerJoin, LeftJoin, FullJoin,
+RightJoin).
+
+If you need to retrieve the joined records and have them
+present in the data structures you pull back, you can use the *Include
+functions. LeftInclude and InnerInclude you can specify normally, but
+RightInclude and FullInclude are different. in that you are expected to
+send along an array to put the records that can't be joined. Read up on how
+Right and Full Outer Joins work if you don't understand why you have to send
+in the array.
+
+Specifying Joins or Includes without writing SQL is done in several ways. The
+simplest is to just pass in the Mapper or MapperPlus for the table you wish
+to join or include. That works fine for then the join is a simple unaliased
+join from one mapper to another. Passing in the mapper will work whether the
+relationship is 1-to-1 or 1-to-many.
+
+But not every join is simple, perhaps you
+have multiple joins of a mapper in a single struct, some or all being aliased,
+in that case you can pass in a string that describes the join. For instance,
+if an Appointments mapper had an Coordinator User as well as Users through
+an Attendee Join Mapper, you could use the string "Coordinator" to indicate
+that Users join to work as opposed to the Attendee Users that would happen
+if you just passed in the Users Mapper.
+
+Simple Join Examples
+
+  // Join Comments to Users for a recentPost, then select some things
+  Comments.EqualTo("post_id", recentPost.Id).InnerJoin(User).Select(...)
+
+  // Join From Threads To Entries as well as the Original Post (First Entry)
+  Threads.LeftJoin(Entries).InnerJoin("OP")...
+
+Aliased Join Examples
+
+  // Join all supervised departments, then if there are any recent employees add them
+  Departments.InnerJoin("Supervisor").LeftJoin(Employees)
+
+  // Join students and the creator of an enrollment (an instance of a college class in a specific semester)
+  Enrollment.InnerJoin("Students").InnerJoin("Creator")
+
+SQL Join Examples
+
+  // Custom polymorphic join
+  Meeting.JoinSql(`INNER JOIN calendared ON
+    calendared.parent_id = meeting.id AND calendared.parent_type = 'Meeting'
+  `)
+
 */
 type Queryable interface {
 	// Identity is the canonical way to duplicate a Scope, it doesn't do anything else
@@ -138,7 +191,7 @@ type Queryable interface {
 	Count() (int64, error)
 	// Retrieve a single column using joins, limits, conditions from the Scope and place
 	// the results into the array pointed at by values
-	Pluck(column string, values interface{}) error
+	Pluck(column, values interface{}) error
 
 	// Run a DELETE FROM query using the conditions from the Scope
 	Delete() error
@@ -153,7 +206,31 @@ type Queryable interface {
 	// Update however you want off of a scope, go wild with SQL, you can pass in some values to be
 	// substituted if you need them
 	UpdateSql(sql string, vals ...interface{}) error
+
+	// LeftJoin is a Left Outer Join to the Mapper or Scoped Mapper String
+	LeftJoin(joins ...interface{}) Scope
+	// InnerJoin will require both sides of the relationship to exist
+	InnerJoin(joins ...interface{}) Scope
+	// Full Join will make a Full Outer Join query using the passed arguments
+	FullJoin(joins ...interface{}) Scope
+	// Right Join will do a right join, if you need it
+	RightJoin(joins ...interface{}) Scope
+	// JoinSql will allow you to write straight SQL for the JOIN
+	JoinSql(sql string, args ...interface{}) Scope
+
+	// LeftInclude
+	LeftInclude(include ...interface{}) Scope
+	// InnerInclude
+	InnerInclude(include ...interface{}) Scope
+	// FullInclude
+	FullInclude(include interface{}, nullRecords interface{}) Scope
+	// RightInclude
+	RightInclude(include interface{}, nullRecords interface{}) Scope
+	// IncludeSql, magic come true
+	IncludeSql(il IncludeList, query string, args ...interface{}) Scope
 }
+
+type IncludeList []interface{}
 
 // Information used in query generation and Mapper interrogation. Much more information will
 // be exposed at a later time
@@ -170,7 +247,7 @@ get around to adding more) need to be publicly accessible.
 type ScopeInformation interface {
 	SelectorSql() string
 	ConditionSql() (string, []interface{})
-	JoinSql() string
+	JoinsSql() string
 	EndingSql() string
 }
 
@@ -205,4 +282,23 @@ type Scope interface {
 	Queryable
 	TableInformation
 	ScopeInformation
+}
+
+// SqlBit is a common interface shared by many internal SQL fragments
+// like joins, SqlFunc's, etc.
+type SqlBit interface {
+	Fragment() string
+	Values() []interface{}
+	String() string
+}
+
+type mixedin interface {
+	Init(interface{}) error
+	InitWithConn(interface{}) error
+	Save() error
+	Delete() error
+	UpdateAttribute(string, interface{}) error
+	UpdateAttributes(Attributes) error
+	IsNull(string) bool
+	SetNull(string)
 }

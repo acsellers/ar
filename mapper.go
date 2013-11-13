@@ -79,7 +79,7 @@ func (m *source) UpdateSql(sql string, vals ...interface{}) error {
 	return m.Identity().UpdateSql(sql, vals...)
 }
 
-func (m *source) Pluck(column string, vals interface{}) error {
+func (m *source) Pluck(column, vals interface{}) error {
 	return m.Identity().Pluck(column, vals)
 }
 
@@ -136,7 +136,9 @@ func (m *source) initializeSingle(val interface{}) error {
 	mx := new(Mixin)
 	mx.model = m
 	mx.instance = val
-	rv.Elem().Field(m.mixinField).Set(reflect.ValueOf(mx))
+	if rv.Elem().Field(m.mixinField).IsNil() {
+		rv.Elem().Field(m.mixinField).Set(reflect.ValueOf(mx))
+	}
 
 	return nil
 }
@@ -268,6 +270,18 @@ func (m *source) extractColumnValues(v reflect.Value) map[string]interface{} {
 			output[field.ColumnInfo.Name] = value.Interface()
 		}
 	}
+	if m.hasMixin {
+		mxf := v.Field(m.mixinField)
+		if !mxf.IsNil() {
+			if mi, ok := mxf.Interface().(*Mixin); ok {
+				for name, _ := range output {
+					if mi.IsNull(name) {
+						output[name] = nil
+					}
+				}
+			}
+		}
+	}
 	return output
 }
 
@@ -277,4 +291,36 @@ func (s *source) TableName() string {
 
 func (s *source) PrimaryKeyColumn() string {
 	return s.ID.SqlColumn
+}
+
+func (s *source) LeftJoin(joins ...interface{}) Scope {
+	return s.Identity().LeftJoin(joins...)
+}
+func (s *source) InnerJoin(joins ...interface{}) Scope {
+	return s.Identity().InnerJoin(joins...)
+}
+func (s *source) FullJoin(joins ...interface{}) Scope {
+	return s.Identity().FullJoin(joins...)
+}
+func (s *source) RightJoin(joins ...interface{}) Scope {
+	return s.Identity().RightJoin(joins...)
+}
+func (s *source) JoinSql(sql string, args ...interface{}) Scope {
+	return s.Identity().JoinSql(sql, args...)
+}
+
+func (s *source) LeftInclude(include ...interface{}) Scope {
+	return s.Identity().LeftInclude(include...)
+}
+func (s *source) InnerInclude(include ...interface{}) Scope {
+	return s.Identity().InnerInclude(include...)
+}
+func (s *source) FullInclude(include interface{}, nullRecords interface{}) Scope {
+	return s.Identity().FullInclude(include, nullRecords)
+}
+func (s *source) RightInclude(include interface{}, nullRecords interface{}) Scope {
+	return s.Identity().RightInclude(include, nullRecords)
+}
+func (s *source) IncludeSql(il IncludeList, query string, args ...interface{}) Scope {
+	return s.Identity().IncludeSql(il, query, args...)
 }

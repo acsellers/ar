@@ -6,13 +6,14 @@ import (
 	"strings"
 )
 
+// Find looks for the record with primary key equal to val
+func (q *queryable) Find(id interface{}, val interface{}) error {
+	return q.EqualTo(q.source.ID.Column(), id).Retrieve(val)
+}
+
 func (q *queryable) Retrieve(val interface{}) error {
 	query, values := q.source.conn.Dialect.Query(q)
-	rows, err := q.source.runQuery(query, values)
-	if err != nil {
-		return err
-	}
-	defer rows.Close()
+	row := q.source.runQueryRow(query, values)
 
 	if reflect.TypeOf(val).Kind() != reflect.Ptr {
 		return errors.New("Must Supply Ptr to Destination")
@@ -21,8 +22,7 @@ func (q *queryable) Retrieve(val interface{}) error {
 	rfltr := reflector{value}
 	plan := q.source.mapPlan(rfltr)
 
-	rows.Next()
-	e := rows.Scan(plan.Items()...)
+	e := row.Scan(plan.Items()...)
 	if e == nil {
 		e = q.Initialize(val, plan)
 		plan.Finalize(val)
@@ -59,12 +59,17 @@ func (q *queryable) RetrieveAll(dest interface{}) error {
 	return nil
 }
 
-func (q *queryable) Pluck(column string, val interface{}) error {
-	if strings.Index(column, ".") == -1 {
-		column = q.source.SqlName + "." + column
-	}
+func (q *queryable) Pluck(selection interface{}, val interface{}) error {
 	qq := q.Identity().(*queryable)
-	qq.selection = []selector{selector{Formula: column}}
+	switch sv := selection.(type) {
+	case string:
+		if strings.Index(sv, ".") == -1 {
+			sv = q.source.SqlName + "." + sv
+		}
+		qq.selection = []selector{selector{Formula: sv}}
+	case SqlFunc:
+		qq.selection = []selector{selector{Formula: sv.String()}}
+	}
 
 	query, values := qq.source.conn.Dialect.Query(qq)
 	rows, err := qq.source.runQuery(query, values)

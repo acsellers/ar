@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"reflect"
+	"strings"
 )
 
 type source struct {
@@ -31,15 +32,34 @@ func (sm *sourceMapping) Column() string {
 	return sm.SqlTable + "." + sm.SqlColumn
 }
 
+func (sm *sourceMapping) Aliased() bool {
+	return !strings.HasSuffix(sm.FullName, ":"+sm.structOptions.Name)
+}
+func (sm *sourceMapping) MappedColumn() bool {
+	return sm.structOptions != nil && sm.ColumnInfo != nil
+}
+func (sm *sourceMapping) NamedBy(s string) bool {
+	switch {
+	case sm.MappedColumn():
+		return sm.structOptions.Name == s || sm.ColumnInfo.SqlColumn == s
+	case sm.structOptions != nil:
+		return sm.structOptions.Name == s
+	case sm.ColumnInfo != nil:
+		return sm.ColumnInfo.SqlColumn == s
+	default:
+		return false
+	}
+}
+
 type structOptions struct {
 	Name       string
 	Mapped     bool
-	Relation   *source
 	FullName   string
 	Index      int
 	Kind       reflect.Kind
 	ColumnHint string
 	Options    map[string]interface{}
+	Relation   *source
 	ForeignKey *ColumnInfo
 }
 

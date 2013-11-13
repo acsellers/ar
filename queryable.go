@@ -45,7 +45,7 @@ type queryable struct {
 	offset     int
 	limit      int
 	selection  []selector
-	joins      []join
+	joins      []*join
 	conditions []condition
 }
 
@@ -74,7 +74,7 @@ func (q *queryable) ConditionSql() (string, []interface{}) {
 	return "", []interface{}{}
 }
 
-func (q *queryable) JoinSql() string {
+func (q *queryable) JoinsSql() string {
 	if len(q.selection) == 0 {
 		return ""
 	}
@@ -172,11 +172,6 @@ func (q *queryable) Reorder(ordering string) Scope {
 	return nq.Order(ordering)
 }
 
-// Find looks for the record with primary key equal to val
-func (q *queryable) Find(id interface{}, val interface{}) error {
-	return q.EqualTo(q.source.ID.Column(), id).Retrieve(val)
-}
-
 func (q *queryable) Count() (int64, error) {
 	ct := "COUNT(" + q.source.SqlName + "." + q.source.ID.SqlColumn + ")"
 	qq := q.Identity().(*queryable)
@@ -211,4 +206,67 @@ func (q *queryable) Delete() error {
 	query, vals := q.source.conn.Dialect.Delete(q)
 	_, err := q.source.runExec(query, vals)
 	return err
+}
+func (q *queryable) LeftJoin(joins ...interface{}) Scope {
+	nq := q.Identity().(*queryable)
+	for _, j := range joins {
+		jn, cd := newJoin("LEFT", j, q)
+		nq.joins = append(nq.joins, jn...)
+		if len(cd) > 0 {
+			nq.conditions = append(nq.conditions, cd...)
+		}
+	}
+	return nq
+}
+func (q *queryable) InnerJoin(joins ...interface{}) Scope {
+	nq := q.Identity().(*queryable)
+	for _, j := range joins {
+		jn, cd := newJoin("INNER", j, q)
+		nq.joins = append(nq.joins, jn...)
+		if len(cd) > 0 {
+			nq.conditions = append(nq.conditions, cd...)
+		}
+	}
+	return nq
+}
+func (q *queryable) FullJoin(joins ...interface{}) Scope {
+	nq := q.Identity().(*queryable)
+	for _, j := range joins {
+		jn, cd := newJoin("FULL OUTER", j, q)
+		nq.joins = append(nq.joins, jn...)
+		if len(cd) > 0 {
+			nq.conditions = append(nq.conditions, cd...)
+		}
+	}
+	return nq
+}
+func (q *queryable) RightJoin(joins ...interface{}) Scope {
+	nq := q.Identity().(*queryable)
+	for _, j := range joins {
+		jn, cd := newJoin("RIGHT OUTER", j, q)
+		nq.joins = append(nq.joins, jn...)
+		if len(cd) > 0 {
+			nq.conditions = append(nq.conditions, cd...)
+		}
+	}
+	return nq
+}
+func (q *queryable) JoinSql(sql string, args ...interface{}) Scope {
+	return q.Identity().JoinSql(sql, args...)
+}
+
+func (q *queryable) LeftInclude(include ...interface{}) Scope {
+	return q.Identity().LeftInclude(include...)
+}
+func (q *queryable) InnerInclude(include ...interface{}) Scope {
+	return q.Identity().InnerInclude(include...)
+}
+func (q *queryable) FullInclude(include interface{}, nullRecords interface{}) Scope {
+	return q.Identity().FullInclude(include, nullRecords)
+}
+func (q *queryable) RightInclude(include interface{}, nullRecords interface{}) Scope {
+	return q.Identity().RightInclude(include, nullRecords)
+}
+func (q *queryable) IncludeSql(il IncludeList, query string, args ...interface{}) Scope {
+	return q.Identity().IncludeSql(il, query, args...)
 }

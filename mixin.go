@@ -121,5 +121,9 @@ func (m *Mixin) IsNull(column string) bool {
 // Sets whether a column should have a null value in the database.
 // TODO: this only works for IsNull atm, should also be used for saving
 func (m *Mixin) SetNull(column string) {
-	m.nulls = append(m.nulls, column)
+	for _, f := range m.model.Fields {
+		if f.MappedColumn() && f.NamedBy(column) {
+			m.nulls = append(m.nulls, f.structOptions.Name, f.ColumnInfo.SqlColumn)
+		}
+	}
 }

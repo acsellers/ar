@@ -49,10 +49,36 @@ func setupMysqlTestConn() *Connection {
 		panic(err)
 	}
 	conn.Config = NewRailsConfig()
-	conn.CreateMapper("Post", &post{})
-	conn.CreateMapper("User", &user{})
+
+	createDefaultPosts(conn.MustCreateMapper("Post", &post{}))
+	createDefaultUsers(conn.MustCreateMapper("User", &user{}))
 
 	return conn
+}
+
+func createDefaultPosts(Posts Mapper) {
+	p := post{
+		Title:     "Second Post",
+		Permalink: "second_post",
+		Body:      "This is the first post",
+		Views:     1,
+	}
+	Posts.Initialize(&p)
+	p.SetNull("UserId")
+	Posts.SaveAll([]post{
+		post{
+			Title:     "First Post",
+			Permalink: "first_post",
+			Body:      "This is the first-est post",
+			Views:     1,
+			UserId:    1,
+		},
+		p,
+	})
+}
+
+func createDefaultUsers(Users Mapper) {
+	return
 }
 
 func setupPostgresTestConn() *Connection {
@@ -72,8 +98,8 @@ func setupPostgresTestConn() *Connection {
 		panic(err)
 	}
 	conn.Config = NewRailsConfig()
-	conn.CreateMapper("Post", &post{})
-	conn.CreateMapper("User", &user{})
+	createDefaultPosts(conn.MustCreateMapper("Post", &post{}))
+	createDefaultUsers(conn.MustCreateMapper("User", &user{}))
 
 	return conn
 }
@@ -91,8 +117,8 @@ func setupSqliteTestConn() *Connection {
 	}
 
 	conn.Config = NewRailsConfig()
-	conn.CreateMapper("Post", &post{})
-	conn.CreateMapper("User", &user{})
+	createDefaultPosts(conn.MustCreateMapper("Post", &post{}))
+	createDefaultUsers(conn.MustCreateMapper("User", &user{}))
 
 	return conn
 }
@@ -144,9 +170,7 @@ var mysqlCreateScript = []string{
 		"CHARACTER SET = utf8\n" +
 		"COLLATE = utf8_general_ci\n" +
 		"ENGINE = InnoDB\n" +
-		"AUTO_INCREMENT = 3;\n",
-	"INSERT INTO `posts`(`id`,`title`,`permalink`,`body`,`views`,`user_id`) VALUES ( '1', 'First Post', 'first_post', 'This is the first post', '1', '1' );\n",
-	"INSERT INTO `posts`(`id`,`title`,`permalink`,`body`,`views`) VALUES ( '2', 'Second Post', 'second_post', 'Hey must be committed to this, I wrote a second post', '1');;\n",
+		"AUTO_INCREMENT = 1;\n",
 	"CREATE UNIQUE INDEX `unique_id` USING BTREE ON `posts`( `id` );\n",
 	"CREATE UNIQUE INDEX `unique_permalink` USING BTREE ON `posts`( `permalink` );\n",
 	"DROP TABLE IF EXISTS `users` CASCADE;\n",
@@ -184,9 +208,6 @@ var sqliteCreateScript = []string{
 
 	`CREATE INDEX "index_id" ON "posts"( "id" );`,
 
-	`INSERT INTO "posts"("id","title","permalink","body","views","user_id") VALUES ( 1,'First Post','first_post','This is the first post',1,1 );`,
-	`INSERT INTO "posts"("id","title","permalink","body","views","user_id") VALUES ( 2,'Second Post','second_post','Hey must be committed to this, I wrote a second post',1,NULL);`,
-
 	`DROP TABLE IF EXISTS "users";`,
 
 	`CREATE TABLE "users"(
@@ -206,7 +227,7 @@ var sqliteCreateScript = []string{
 }
 
 var postgresCreateScript = []string{
-	`DROP TABLE IF EXISTS "posts"`,
+	`DROP TABLE IF EXISTS "posts";`,
 	`CREATE TABLE posts(
     id bigserial NOT NULL,
     title character varying(255) NOT NULL,
@@ -219,10 +240,8 @@ var postgresCreateScript = []string{
     OIDS=FALSE
   );`,
 	`ALTER TABLE posts OWNER TO postgres;`,
-	"INSERT INTO posts (title,permalink,body,views,user_id) VALUES ('First Post', 'first_post', 'This is the first post', 1,1);",
-	"INSERT INTO posts (title,permalink,body,views) VALUES ('Second Post', 'second_post', 'Hey must be committed to this, I wrote a second post', 1);",
 
-	`DROP TABLE IF EXISTS "users"`,
+	`DROP TABLE IF EXISTS "users";`,
 	`CREATE TABLE "users"(
     id bigserial NOT NULL,
     name character varying(255) NOT NULL,
