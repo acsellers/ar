@@ -160,6 +160,8 @@ type Queryable interface {
 	EqualTo(column string, val interface{}) Scope
 	// The Between Scope is a way to specify a SQL BETWEEN without writing a Where fragment.
 	Between(column string, lower, upper interface{}) Scope
+	// The In Scope is a way to specify an SQL IN for variable sized arrays of items
+	In(column string, items interface{}) Scope
 	// The Where Scope is a generalized way to write SQL Expressions. It can do simple matching
 	// like EqualTo, Cond, Between or In written in SQL. It will also handle binding variables
 	// within a SQL statement.

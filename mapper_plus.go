@@ -40,6 +40,12 @@ func (mp *mapperPlus) Between(column string, lower, upper interface{}) Scope {
 	return mp
 }
 
+func (mp *mapperPlus) In(column string, items interface{}) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.In(column, items)
+	return mp
+}
+
 func (mp *mapperPlus) Cond(column string, condition int, val interface{}) Scope {
 	mp = mp.identity()
 	mp.query = mp.query.Cond(column, condition, val)

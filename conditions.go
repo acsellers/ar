@@ -170,6 +170,39 @@ func (bc *betweenCondition) Values() []interface{} {
 	return valuesFor(bc.lower, bc.upper)
 }
 
+func newInCondition(column string, items interface{}) *inCondition {
+	ic := &inCondition{
+		column: column,
+	}
+	rv := reflect.ValueOf(items)
+	if rv.Kind() == reflect.Slice || rv.Kind() == reflect.Array {
+		for i := 0; i < rv.Len(); i++ {
+			ic.items = append(ic.items, rv.Index(i).Interface())
+		}
+	}
+
+	return ic
+}
+
+type inCondition struct {
+	column string
+	items  []interface{}
+}
+
+func (ic *inCondition) String() string {
+	return withVars(ic.Fragment(), ic.Values())
+}
+func (ic *inCondition) Fragment() string {
+	places := make([]string, len(ic.items))
+	for i, _ := range places {
+		places[i] = "?"
+	}
+	return ic.column + " IN (" + strings.Join(places, ", ") + ")"
+}
+func (ic *inCondition) Values() []interface{} {
+	return ic.items
+}
+
 type equalCondition struct {
 	column string
 	val    interface{}
