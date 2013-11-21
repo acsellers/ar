@@ -46,7 +46,7 @@ func (mp *mapperPlus) In(column string, items interface{}) Scope {
 	return mp
 }
 
-func (mp *mapperPlus) Cond(column string, condition int, val interface{}) Scope {
+func (mp *mapperPlus) Cond(column string, condition COND, val interface{}) Scope {
 	mp = mp.identity()
 	mp.query = mp.query.Cond(column, condition, val)
 	return mp

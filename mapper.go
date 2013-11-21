@@ -14,7 +14,7 @@ func (s *source) Where(fragment string, args ...interface{}) Scope {
 	return s.Identity().Where(fragment, args...)
 }
 
-func (s *source) Cond(column string, condition int, val interface{}) Scope {
+func (s *source) Cond(column string, condition COND, val interface{}) Scope {
 	return s.Identity().Cond(column, condition, val)
 }
 

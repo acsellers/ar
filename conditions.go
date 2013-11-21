@@ -256,7 +256,7 @@ func (wc *whereCondition) Values() []interface{} {
 
 type varyCondition struct {
 	column string
-	cond   int
+	cond   COND
 	val    interface{}
 }
 

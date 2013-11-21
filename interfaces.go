@@ -155,7 +155,7 @@ type Queryable interface {
 	Identity() Scope
 
 	// Cond is a quick interface to the simple compare operations
-	Cond(column string, condition int, val interface{}) Scope
+	Cond(column string, condition COND, val interface{}) Scope
 	// The EqualTo scope is a short hand way of saying Cond(column, db.EQUAL_TO, value).
 	EqualTo(column string, val interface{}) Scope
 	// The Between Scope is a way to specify a SQL BETWEEN without writing a Where fragment.

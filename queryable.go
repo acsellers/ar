@@ -5,9 +5,11 @@ import (
 	"strings"
 )
 
+type COND int
+
 // Conditions for Cond calls
 const (
-	EQUAL = iota
+	EQUAL COND = iota
 	NOT_EQUAL
 	LESS_THAN
 	LESS_OR_EQUAL
@@ -17,7 +19,7 @@ const (
 
 // Shorthand conditions for Cond calls
 const (
-	EQ = iota
+	EQ COND = iota
 	NE
 	LT
 	LTE
@@ -138,7 +140,7 @@ func (q *queryable) In(column string, items interface{}) Scope {
 	return nq
 }
 
-func (q *queryable) Cond(column string, condition int, val interface{}) Scope {
+func (q *queryable) Cond(column string, condition COND, val interface{}) Scope {
 	nq := q.Identity().(*queryable)
 	nq.conditions = append(nq.conditions, &varyCondition{column, condition, val})
 
