@@ -128,12 +128,17 @@ func setupSqliteTestConn() *Connection {
 
 func availableTestConns() []*Connection {
 	if len(cachedConnection) == 0 {
-		cachedConnection = []*Connection{
-			setupMysqlTestConn(),
-			setupSqliteTestConn(),
-			setupPostgresTestConn(),
+		if os.Getenv("CODEBOT") == "" {
+			cachedConnection = []*Connection{
+				setupMysqlTestConn(),
+				setupSqliteTestConn(),
+				setupPostgresTestConn(),
+			}
+		} else {
+			cachedConnection = []*Connection{
+				setupSqliteTestConn(),
+			}
 		}
-		return cachedConnection
 	}
 	return cachedConnection
 }
