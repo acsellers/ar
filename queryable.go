@@ -46,6 +46,7 @@ type queryable struct {
 	*source
 	order      []string
 	groupBy    string
+	having     []whereCondition
 	offset     int
 	limit      int
 	selection  []selector
@@ -115,10 +116,19 @@ func (q *queryable) JoinsSql() string {
 	return strings.Join(output, " ")
 }
 
-func (queryable *queryable) EndingSql() string {
+func (queryable *queryable) EndingSql() (string, []interface{}) {
 	var output string
+	var vals []interface{}
 	if queryable.groupBy != "" {
 		output += " GROUP BY " + queryable.groupBy
+	}
+	if len(queryable.having) > 0 {
+		clauses := []string{}
+		for _, h := range queryable.having {
+			vals = append(vals, h.Values()...)
+			clauses = append(clauses, h.Fragment())
+		}
+		output += strings.Join(clauses, " AND ")
 	}
 	if len(queryable.order) > 0 {
 		output += " ORDER BY " + strings.Join(queryable.order, ", ")
@@ -130,7 +140,7 @@ func (queryable *queryable) EndingSql() string {
 		output += " OFFSET " + fmt.Sprint(queryable.offset)
 	}
 
-	return output
+	return output, vals
 }
 
 // Identity is the way to clone a queryable, it is used everywhere
@@ -147,6 +157,18 @@ func (q *queryable) Identity() Scope {
 func (q *queryable) Where(fragment string, args ...interface{}) Scope {
 	nq := q.Identity().(*queryable)
 	nq.conditions = append(nq.conditions, &whereCondition{fragment, args})
+	return nq
+}
+
+func (q *queryable) Having(fragment string, args ...interface{}) Scope {
+	nq := q.Identity().(*queryable)
+	nq.having = append(nq.having, whereCondition{fragment, args})
+	return nq
+}
+
+func (q *queryable) GroupBy(groupItem string) Scope {
+	nq := q.Identity().(*queryable)
+	nq.groupBy = groupItem
 	return nq
 }
 

@@ -14,6 +14,14 @@ func (s *source) Where(fragment string, args ...interface{}) Scope {
 	return s.Identity().Where(fragment, args...)
 }
 
+func (s *source) Having(fragment string, args ...interface{}) Scope {
+	return s.Identity().Having(fragment, args...)
+}
+
+func (s *source) GroupBy(groupItem string) Scope {
+	return s.Identity().GroupBy(groupItem)
+}
+
 func (s *source) Cond(column string, condition COND, val interface{}) Scope {
 	return s.Identity().Cond(column, condition, val)
 }

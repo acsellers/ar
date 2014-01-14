@@ -167,8 +167,15 @@ type Queryable interface {
 	// within a SQL statement.
 	Where(fragment string, args ...interface{}) Scope
 
-	//Having(sql string, values ...interface{}) Scope
-	//GroupBy(table string) Scope
+	// The Having SQL clause allows you to filter on aggregated
+	// values from a GROUP BY. Since Having always is using SQL
+	// functions, it should be simpler to just write the SQL
+	// fragment directly instead of using a SqlFunc constructor.
+	Having(fragment string, values ...interface{}) Scope
+
+	// GroupBy allows you to group by a table or column, this is
+	// necessary for aggregation functions.
+	GroupBy(groupItem string) Scope
 
 	// Limit sets the number of results to return from the full query
 	Limit(limit int) Scope
@@ -250,7 +257,7 @@ type ScopeInformation interface {
 	SelectorSql() string
 	ConditionSql() (string, []interface{})
 	JoinsSql() string
-	EndingSql() string
+	EndingSql() (string, []interface{})
 }
 
 /*

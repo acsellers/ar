@@ -56,7 +56,11 @@ func (d Base) Query(scope Scope) (string, []interface{}) {
 	if conditions != "" {
 		output += " WHERE " + conditions
 	}
-	output += scope.EndingSql()
+	ending, endValues := scope.EndingSql()
+	if len(endValues) > 0 {
+		values = append(values, endValues...)
+	}
+	output += ending
 
 	return d.Dialect.FormatQuery(output), values
 }

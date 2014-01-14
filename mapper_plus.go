@@ -28,6 +28,18 @@ func (mp *mapperPlus) Where(fragment string, args ...interface{}) Scope {
 	return mp
 }
 
+func (mp *mapperPlus) Having(fragment string, args ...interface{}) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.Having(fragment, args...)
+	return mp
+}
+
+func (mp *mapperPlus) GroupBy(groupItem string) Scope {
+	mp = mp.identity()
+	mp.query = mp.query.GroupBy(groupItem)
+	return mp
+}
+
 func (mp *mapperPlus) EqualTo(column string, val interface{}) Scope {
 	mp = mp.identity()
 	mp.query = mp.query.EqualTo(column, val)
@@ -96,7 +108,7 @@ func (mp *mapperPlus) ConditionSql() (string, []interface{}) {
 func (mp *mapperPlus) JoinsSql() string {
 	return mp.identity().query.JoinsSql()
 }
-func (mp *mapperPlus) EndingSql() string {
+func (mp *mapperPlus) EndingSql() (string, []interface{}) {
 	return mp.identity().query.EndingSql()
 }
 

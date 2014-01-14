@@ -154,7 +154,7 @@ and have a score of 90 on the 3 tests they've taken.
     EqualTo("meeting_attendance.attended", true).
     Join(myClass.Quizzes).
     GroupBy(myClass.Students)
-    Having(db.Func("AVG(quiz_score.overall)"), 90)
+    Having("AVG(quiz_score.overall) >= ?", 90)
 
 Or perhaps you would rather see the top 5 most popular posts on your blog
 from the articles you released in the past month.
