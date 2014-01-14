@@ -293,7 +293,6 @@ func (m *source) extractColumnValues(v reflect.Value) map[string]interface{} {
 					}
 				}
 			}
-
 		}
 	} else {
 		for _, f := range m.Fields {

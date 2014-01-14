@@ -1,8 +1,8 @@
 package db
 
 import (
-	. "github.com/acsellers/assert"
 	"testing"
+	. "github.com/acsellers/assert"
 )
 
 func TestPostMapper(t *testing.T) {
@@ -122,6 +122,12 @@ func TestIn(t *testing.T) {
 
 			var posts []post
 			Posts.In("id", []int{1, 2}).RetrieveAll(&posts)
+			test.AreEqual(2, len(posts))
+			if len(posts) == 2 {
+				test.AreEqual("First Post", posts[0].Title)
+			}
+
+			Posts.In("id", []post{post{Id: 1}, post{Id: 2}}).RetrieveAll(&posts)
 			test.AreEqual(2, len(posts))
 			if len(posts) == 2 {
 				test.AreEqual("First Post", posts[0].Title)

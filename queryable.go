@@ -2,7 +2,9 @@ package db
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
+	"time"
 )
 
 type COND int
@@ -71,9 +73,35 @@ func (q *queryable) SelectorSql() string {
 func (q *queryable) ConditionSql() (string, []interface{}) {
 	if len(q.conditions) > 0 {
 		ac := &andCondition{q.conditions}
-		return ac.Fragment(), ac.Values()
+		return ac.Fragment(), q.cleanValues(ac.Values())
 	}
 	return "", []interface{}{}
+}
+
+// cleanValues takes in an array of values, and exchanges any structs
+// for their ids, it prefers mixins
+func (q *queryable) cleanValues(vals []interface{}) []interface{} {
+	output := make([]interface{}, len(vals))
+	for i, val := range vals {
+		// Deal with the lone sql struct, time.Time
+		if _, ok := val.(*time.Time); ok {
+			output[i] = val
+			continue
+		}
+
+		switch reflect.TypeOf(val).Kind() {
+		case reflect.Struct:
+			fn := fullNameFor(reflect.TypeOf(val))
+			if s, ok := q.conn.mappedStructs[fn]; ok {
+				output[i] = s.extractID(reflect.ValueOf(val))
+			} else {
+				output[i] = val
+			}
+		default:
+			output[i] = val
+		}
+	}
+	return output
 }
 
 func (q *queryable) JoinsSql() string {
